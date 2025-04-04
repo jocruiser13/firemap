@@ -73,6 +73,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
     const supabase = createClient(
       "https://lqyqeyxujdmvcromkkbg.supabase.co",
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxeXFleXh1amRtdmNyb21ra2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3MzUyOTIsImV4cCI6MjA1OTMxMTI5Mn0.2IxvU0Z49fJhvfn-Eey_PDdeUvYqDgDilIoudN9MGkU"
@@ -197,8 +198,14 @@
 
     window.deleteData = async function(id) {
       if (!confirm("この水利情報を削除しますか？")) return;
-      await supabase.from("water_data").delete().eq("id", id);
-      renderAll();
+      const { error } = await supabase.from("water_data").delete().eq("id", id);
+      if (error) {
+        alert("削除エラー: " + error.message);
+        console.error(error);
+      } else {
+        alert("削除しました！");
+        renderAll();
+      }
     };
 
     window.searchMarker = function () {
