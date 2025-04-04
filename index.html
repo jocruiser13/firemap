@@ -361,7 +361,7 @@
   alert("input-id: " + idVal);
 
   const result = idVal
-  ? await supabase.from("water_data").update(data).eq("id", idVal)
+  ? await supabase.from("water_data").update(data, { returning: "representation" }).eq("id", idVal)
   : await supabase.from("water_data").insert([data]);
 
 alert("result: " + JSON.stringify(result)); 
