@@ -88,18 +88,43 @@
       .bindPopup("深山公園中心")
       .openPopup();
   </script>
+<script>
+  // 位置情報と日付の自動入力
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function (position) {
+      document.getElementById("lat").value = position.coords.latitude.toFixed(6);
+      document.getElementById("lng").value = position.coords.longitude.toFixed(6);
+    });
+  }
 
-  <script>
-    // 位置情報と日付の自動入力
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function (position) {
-        document.getElementById("lat").value = position.coords.latitude.toFixed(6);
-        document.getElementById("lng").value = position.coords.longitude.toFixed(6);
-      });
-    }
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("date").value = today;
 
-    const today = new Date().toISOString().split("T")[0];
+  // フォーム送信イベントを処理
+  document.getElementById("waterForm").addEventListener("submit", function (e) {
+    e.preventDefault(); // デフォルトの送信を止める
+
+    const formData = new FormData(e.target);
+    const data = {};
+    formData.forEach((value, key) => {
+      data[key] = value;
+    });
+
+    // ローカルストレージに保存
+    const existing = JSON.parse(localStorage.getItem("waterData") || "[]");
+    existing.push(data);
+    localStorage.setItem("waterData", JSON.stringify(existing));
+
+    alert("保存しました！（ローカル保存）");
+
+    // 入力内容をリセット
+    e.target.reset();
+    document.getElementById("lat").value = "";
+    document.getElementById("lng").value = "";
     document.getElementById("date").value = today;
-  </script>
+  });
+</script>
+  
+  
 </body>
 </html>
