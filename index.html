@@ -59,24 +59,24 @@
     <h2>水利情報の入力</h2>
     <form id="waterForm">
       <input type="hidden" name="index" id="index" />
-      <label>名称：<input type="text" name="name" required /></label><br><br>
+      <label>名称：<input type="text" name="name" id="name" required /></label><br><br>
       <label>種類：
-        <select name="type">
+        <select name="type" id="type">
           <option value="消火栓">消火栓</option>
           <option value="水槽">水槽</option>
           <option value="その他">その他</option>
         </select>
       </label><br><br>
       <label>利用可否：
-        <select name="usable">
+        <select name="usable" id="usable">
           <option value="○">○</option>
           <option value="×">×</option>
           <option value="要確認">要確認</option>
         </select>
       </label><br><br>
-      <label>静水圧（MPa）：<input type="number" name="pressure" step="0.01" /></label><br><br>
-      <label>容量（t）：<input type="number" name="capacity" /></label><br><br>
-      <label>備考：<textarea name="note" rows="3" cols="30"></textarea></label><br><br>
+      <label>静水圧（MPa）：<input type="number" name="pressure" id="pressure" step="0.01" /></label><br><br>
+      <label>容量（t）：<input type="number" name="capacity" id="capacity" /></label><br><br>
+      <label>備考：<textarea name="note" id="note" rows="3" cols="30"></textarea></label><br><br>
       <label>写真：<input type="file" name="photo" /></label><br><br>
       <label>緯度：<input type="text" name="lat" id="lat" /></label><br><br>
       <label>経度：<input type="text" name="lng" id="lng" /></label><br><br>
@@ -100,177 +100,157 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {      const map = L.map('map').setView([34.483955, 133.931957], 16);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
+    const map = L.map('map').setView([34.483955, 133.931957], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
 
-      const today = new Date().toISOString().split("T")[0];
-      document.getElementById("date").value = today;
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("date").value = today;
 
-      let markers = [];
+    let markers = [];
 
-      const form = document.getElementById("waterForm");
-      const dataList = document.getElementById("dataList");
+    const form = document.getElementById("waterForm");
 
-      const icons = {
-        "消火栓": new L.Icon({
-          iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        }),
-        "水槽": new L.Icon({
-          iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
-          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        }),
-        "その他": new L.Icon({
-          iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
-          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        })
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const data = {
+        name: document.getElementById("name").value,
+        type: document.getElementById("type").value,
+        usable: document.getElementById("usable").value,
+        pressure: document.getElementById("pressure").value,
+        capacity: document.getElementById("capacity").value,
+        note: document.getElementById("note").value,
+        lat: document.getElementById("lat").value,
+        lng: document.getElementById("lng").value,
+        date: document.getElementById("date").value
       };
 
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        const formData = new FormData(form);
-        const data = {};
-        formData.forEach((value, key) => {
-          data[key] = value;
-        });
+      let existing = JSON.parse(localStorage.getItem("waterData") || "[]");
+      const idx = document.getElementById("index").value;
 
-        let existing = JSON.parse(localStorage.getItem("waterData") || "[]");
-        const idx = data.index;
-        delete data.index;
-
-        if (idx !== "") {
-          existing[idx] = data;
-          alert("更新しました！");
-        } else {
-          existing.push(data);
-          alert("保存しました！（ローカル保存）");
-        }
-
-        localStorage.setItem("waterData", JSON.stringify(existing));
-        form.reset();
-        document.getElementById("date").value = today;
-        document.getElementById("index").value = "";
-
-        renderAll();
-      });
-
-      function renderAll() {
-        renderMarkers();
-        displayData();
-        populateSearchSelect();
+      if (idx !== "") {
+        existing[idx] = data;
+        alert("更新しました！");
+      } else {
+        existing.push(data);
+        alert("保存しました！（ローカル保存）");
       }
 
-      function renderMarkers() {
-        markers.forEach(m => map.removeLayer(m));
-        markers = [];
-
-        const data = JSON.parse(localStorage.getItem("waterData") || "[]");
-        data.forEach((d, i) => {
-          if (d.lat && d.lng) {
-            const icon = icons[d.type] || icons["その他"];
-            const popupText = `<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>静水圧: ${d.pressure} MPa<br>容量: ${d.capacity} t<br>備考: ${d.note || 'なし'}`;
-            const marker = L.marker([parseFloat(d.lat), parseFloat(d.lng)], { icon })
-              .addTo(map)
-              .bindPopup(popupText);
-            marker._customId = d.name;
-            markers.push(marker);
-          }
-        });
-      }
-
-      function displayData() {
-        const data = JSON.parse(localStorage.getItem("waterData") || "[]");
-        if (data.length === 0) {
-          dataList.innerHTML = "<p>保存されたデータはありません。</p>";
-          return;
-        }
-
-        let html = "<table><tr><th>名称</th><th>種類</th><th>利用可否</th><th>静水圧（MPa）</th><th>容量（t）</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th></tr>";
-        data.forEach((d, i) => {
-          html += `<tr>
-            <td>${d.name}</td>
-            <td>${d.type}</td>
-            <td>${d.usable}</td>
-            <td>${d.pressure}</td>
-            <td>${d.capacity}</td>
-            <td>${d.lat}</td>
-            <td>${d.lng}</td>
-            <td>${d.date}</td>
-            <td>
-              <button class="btn-small" onclick="editData(${i})">編集</button>
-              <button class="btn-small" onclick="deleteData(${i})">削除</button>
-            </td>
-          </tr>`;
-        });
-        html += "</table>";
-        dataList.innerHTML = html;
-      }
-
-      function deleteData(index) {
-        if (!confirm("この水利情報を削除しますか？")) return;
-        let data = JSON.parse(localStorage.getItem("waterData") || "[]");
-        data.splice(index, 1);
-        localStorage.setItem("waterData", JSON.stringify(data));
-        renderAll();
-      }
-
-      function editData(index) {
-        const data = JSON.parse(localStorage.getItem("waterData") || "[]")[index];
-        if (!data) return;
-
-        for (let key in data) {
-          if (form.elements[key]) {
-            if (form.elements[key].tagName === "SELECT") {
-              Array.from(form.elements[key].options).forEach(opt => {
-                opt.selected = opt.value === data[key];
-              });
-            } else {
-              form.elements[key].value = data[key];
-            }
-          }
-        }
-
-        document.getElementById("index").value = index;
-      }
-
-      function populateSearchSelect() {
-        const select = document.getElementById("searchSelect");
-        select.innerHTML = '<option value="">選択してください</option>';
-        const data = JSON.parse(localStorage.getItem("waterData") || "[]");
-        data.forEach((d, i) => {
-          const option = document.createElement("option");
-          option.value = d.name;
-          option.textContent = d.name;
-          select.appendChild(option);
-        });
-      }
-
-      function searchMarker() {
-        const name = document.getElementById("searchSelect").value;
-        if (!name) return;
-        const marker = markers.find(m => m._customId === name);
-        if (marker) {
-          map.setView(marker.getLatLng(), 18);
-          marker.openPopup();
-        }
-      }
+      localStorage.setItem("waterData", JSON.stringify(existing));
+      form.reset();
+      document.getElementById("date").value = today;
+      document.getElementById("index").value = "";
 
       renderAll();
     });
+
+    function renderAll() {
+      renderMarkers();
+      displayData();
+      populateSearchSelect();
+    }
+
+    function renderMarkers() {
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+
+      const data = JSON.parse(localStorage.getItem("waterData") || "[]");
+      data.forEach((d, i) => {
+        if (d.lat && d.lng) {
+          const iconUrl = d.type === "消火栓" ? "red" : d.type === "水槽" ? "blue" : "green";
+          const icon = new L.Icon({
+            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconUrl}.png`,
+            shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+          });
+          const marker = L.marker([parseFloat(d.lat), parseFloat(d.lng)], { icon })
+            .addTo(map)
+            .bindPopup(`<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>静水圧: ${d.pressure} MPa<br>容量: ${d.capacity} t<br>備考: ${d.note || 'なし'}`);
+          marker._customId = d.name;
+          markers.push(marker);
+        }
+      });
+    }
+
+    function displayData() {
+      const data = JSON.parse(localStorage.getItem("waterData") || "[]");
+      const dataList = document.getElementById("dataList");
+      if (data.length === 0) {
+        dataList.innerHTML = "<p>保存されたデータはありません。</p>";
+        return;
+      }
+
+      let html = "<table><tr><th>名称</th><th>種類</th><th>利用可否</th><th>静水圧（MPa）</th><th>容量（t）</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th></tr>";
+      data.forEach((d, i) => {
+        html += `<tr>
+          <td>${d.name}</td>
+          <td>${d.type}</td>
+          <td>${d.usable}</td>
+          <td>${d.pressure}</td>
+          <td>${d.capacity}</td>
+          <td>${d.lat}</td>
+          <td>${d.lng}</td>
+          <td>${d.date}</td>
+          <td>
+            <button class="btn-small" onclick="editData(${i})">編集</button>
+            <button class="btn-small" onclick="deleteData(${i})">削除</button>
+          </td>
+        </tr>`;
+      });
+      html += "</table>";
+      dataList.innerHTML = html;
+    }
+
+    function deleteData(index) {
+      if (!confirm("この水利情報を削除しますか？")) return;
+      let data = JSON.parse(localStorage.getItem("waterData") || "[]");
+      data.splice(index, 1);
+      localStorage.setItem("waterData", JSON.stringify(data));
+      renderAll();
+    }
+
+    function editData(index) {
+      const data = JSON.parse(localStorage.getItem("waterData") || "[]")[index];
+      if (!data) return;
+
+      document.getElementById("name").value = data.name || "";
+      document.getElementById("type").value = data.type || "";
+      document.getElementById("usable").value = data.usable || "";
+      document.getElementById("pressure").value = data.pressure || "";
+      document.getElementById("capacity").value = data.capacity || "";
+      document.getElementById("note").value = data.note || "";
+      document.getElementById("lat").value = data.lat || "";
+      document.getElementById("lng").value = data.lng || "";
+      document.getElementById("date").value = data.date || today;
+      document.getElementById("index").value = index;
+    }
+
+    function populateSearchSelect() {
+      const select = document.getElementById("searchSelect");
+      select.innerHTML = '<option value="">選択してください</option>';
+      const data = JSON.parse(localStorage.getItem("waterData") || "[]");
+      data.forEach((d) => {
+        const option = document.createElement("option");
+        option.value = d.name;
+        option.textContent = d.name;
+        select.appendChild(option);
+      });
+    }
+
+    function searchMarker() {
+      const name = document.getElementById("searchSelect").value;
+      const marker = markers.find(m => m._customId === name);
+      if (marker) {
+        map.setView(marker.getLatLng(), 18);
+        marker.openPopup();
+      }
+    }
+
+    renderAll();
   </script>
 </body>
 </html>
