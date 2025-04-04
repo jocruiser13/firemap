@@ -37,9 +37,15 @@
       border: 1px solid #999;
       padding: 5px;
       font-size: 0.9em;
+      vertical-align: top;
     }
     th {
       background: #eee;
+    }
+    .btn-small {
+      padding: 3px 6px;
+      margin: 2px 0;
+      font-size: 0.8em;
     }
   </style>
 </head>
@@ -49,8 +55,8 @@
   <div id="form-area">
     <h2>水利情報の入力</h2>
     <form id="waterForm">
+      <input type="hidden" name="index" id="index" />
       <label>名称：<input type="text" name="name" required /></label><br><br>
-
       <label>種類：
         <select name="type">
           <option value="消火栓">消火栓</option>
@@ -58,7 +64,6 @@
           <option value="その他">その他</option>
         </select>
       </label><br><br>
-
       <label>利用可否：
         <select name="usable">
           <option value="○">○</option>
@@ -66,22 +71,14 @@
           <option value="要確認">要確認</option>
         </select>
       </label><br><br>
-
       <label>静水圧（kPa）：<input type="number" name="pressure" /></label><br><br>
       <label>容量（L）：<input type="number" name="capacity" /></label><br><br>
-
-      <label>備考：<br>
-        <textarea name="note" rows="3" cols="30"></textarea>
-      </label><br><br>
-
+      <label>備考：<textarea name="note" rows="3" cols="30"></textarea></label><br><br>
       <label>写真：<input type="file" name="photo" /></label><br><br>
-
       <label>緯度：<input type="text" name="lat" id="lat" /></label><br><br>
       <label>経度：<input type="text" name="lng" id="lng" /></label><br><br>
-
       <label>最終更新日：<input type="text" name="date" id="date" readonly /></label><br><br>
-
-      <button type="submit">送信（ローカル保存）</button>
+      <button type="submit">送信（保存または更新）</button>
     </form>
   </div>
 
@@ -100,29 +97,59 @@
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("date").value = today;
 
+    let markers = [];
+
     const form = document.getElementById("waterForm");
     const dataList = document.getElementById("dataList");
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-
       const formData = new FormData(form);
       const data = {};
       formData.forEach((value, key) => {
         data[key] = value;
       });
 
-      const existing = JSON.parse(localStorage.getItem("waterData") || "[]");
-      existing.push(data);
-      localStorage.setItem("waterData", JSON.stringify(existing));
+      let existing = JSON.parse(localStorage.getItem("waterData") || "[]");
+      const idx = data.index;
+      delete data.index;
 
-      alert("保存しました！（ローカル保存）");
+      if (idx !== "") {
+        existing[idx] = data;
+        alert("更新しました！");
+      } else {
+        existing.push(data);
+        alert("保存しました！（ローカル保存）");
+      }
+
+      localStorage.setItem("waterData", JSON.stringify(existing));
       form.reset();
       document.getElementById("date").value = today;
+      document.getElementById("index").value = "";
 
-      displayData();
-      renderMarkers();
+      renderAll();
     });
+
+    function renderAll() {
+      renderMarkers();
+      displayData();
+    }
+
+    function renderMarkers() {
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+
+      const data = JSON.parse(localStorage.getItem("waterData") || "[]");
+      data.forEach(d => {
+        if (d.lat && d.lng) {
+          const popupText = `<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>備考: ${d.note || 'なし'}`;
+          const marker = L.marker([parseFloat(d.lat), parseFloat(d.lng)])
+            .addTo(map)
+            .bindPopup(popupText);
+          markers.push(marker);
+        }
+      });
+    }
 
     function displayData() {
       const data = JSON.parse(localStorage.getItem("waterData") || "[]");
@@ -131,8 +158,8 @@
         return;
       }
 
-      let html = "<table><tr><th>名称</th><th>種類</th><th>利用可否</th><th>静水圧</th><th>容量</th><th>緯度</th><th>経度</th><th>更新日</th></tr>";
-      data.forEach(d => {
+      let html = "<table><tr><th>名称</th><th>種類</th><th>利用可否</th><th>静水圧</th><th>容量</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th></tr>";
+      data.forEach((d, i) => {
         html += `<tr>
           <td>${d.name}</td>
           <td>${d.type}</td>
@@ -142,27 +169,36 @@
           <td>${d.lat}</td>
           <td>${d.lng}</td>
           <td>${d.date}</td>
+          <td>
+            <button class="btn-small" onclick="editData(${i})">編集</button>
+            <button class="btn-small" onclick="deleteData(${i})">削除</button>
+          </td>
         </tr>`;
       });
       html += "</table>";
       dataList.innerHTML = html;
     }
 
-    function renderMarkers() {
-      const data = JSON.parse(localStorage.getItem("waterData") || "[]");
-      data.forEach(d => {
-        if (d.lat && d.lng) {
-          const popupText = `<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>備考: ${d.note || 'なし'}`;
-          L.marker([parseFloat(d.lat), parseFloat(d.lng)])
-            .addTo(map)
-            .bindPopup(popupText);
-        }
-      });
+    function deleteData(index) {
+      if (!confirm("この水利情報を削除しますか？")) return;
+      let data = JSON.parse(localStorage.getItem("waterData") || "[]");
+      data.splice(index, 1);
+      localStorage.setItem("waterData", JSON.stringify(data));
+      renderAll();
     }
 
-    // 初期表示
-    displayData();
-    renderMarkers();
+    function editData(index) {
+      const data = JSON.parse(localStorage.getItem("waterData") || "[]")[index];
+      if (!data) return;
+      for (let key in data) {
+        if (form.elements[key]) {
+          form.elements[key].value = data[key];
+        }
+      }
+      document.getElementById("index").value = index;
+    }
+
+    renderAll(); // 初回表示
   </script>
 </body>
 </html>
