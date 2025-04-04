@@ -71,8 +71,8 @@
           <option value="要確認">要確認</option>
         </select>
       </label><br><br>
-      <label>静水圧（kPa）：<input type="number" name="pressure" /></label><br><br>
-      <label>容量（L）：<input type="number" name="capacity" /></label><br><br>
+      <label>静水圧（MPa）：<input type="number" name="pressure" /></label><br><br>
+      <label>容量（t）：<input type="number" name="capacity" /></label><br><br>
       <label>備考：<textarea name="note" rows="3" cols="30"></textarea></label><br><br>
       <label>写真：<input type="file" name="photo" /></label><br><br>
       <label>緯度：<input type="text" name="lat" id="lat" /></label><br><br>
@@ -101,6 +101,33 @@
 
     const form = document.getElementById("waterForm");
     const dataList = document.getElementById("dataList");
+
+    const icons = {
+      "消火栓": new L.Icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      }),
+      "水槽": new L.Icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      }),
+      "その他": new L.Icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      })
+    };
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -142,8 +169,9 @@
       const data = JSON.parse(localStorage.getItem("waterData") || "[]");
       data.forEach(d => {
         if (d.lat && d.lng) {
-          const popupText = `<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>備考: ${d.note || 'なし'}`;
-          const marker = L.marker([parseFloat(d.lat), parseFloat(d.lng)])
+          const icon = icons[d.type] || icons["その他"];
+          const popupText = `<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>静水圧: ${d.pressure} MPa<br>容量: ${d.capacity} t<br>備考: ${d.note || 'なし'}`;
+          const marker = L.marker([parseFloat(d.lat), parseFloat(d.lng)], { icon })
             .addTo(map)
             .bindPopup(popupText);
           markers.push(marker);
@@ -158,7 +186,7 @@
         return;
       }
 
-      let html = "<table><tr><th>名称</th><th>種類</th><th>利用可否</th><th>静水圧</th><th>容量</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th></tr>";
+      let html = "<table><tr><th>名称</th><th>種類</th><th>利用可否</th><th>静水圧（MPa）</th><th>容量（t）</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th></tr>";
       data.forEach((d, i) => {
         html += `<tr>
           <td>${d.name}</td>
@@ -198,7 +226,7 @@
       document.getElementById("index").value = index;
     }
 
-    renderAll(); // 初回表示
+    renderAll();
   </script>
 </body>
 </html>
