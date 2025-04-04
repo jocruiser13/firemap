@@ -215,8 +215,8 @@
 
   const idVal = document.getElementById("input-id").value;
   const result = idVal
-    ? await supabase.from("water_data").update(data).eq("id", parseInt(idVal)).select()
-    : await supabase.from("water_data").insert([data]);
+  ? await supabase.from("water_data").update(data).eq("id", parseInt(idVal))
+  : await supabase.from("water_data").insert([data]);
 
   if (result.error) {
     console.error(result.error);
