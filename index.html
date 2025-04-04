@@ -361,8 +361,8 @@
   alert("input-id: " + idVal);
 
   const result = idVal
-    ? await supabase.from("water_data").update(data).eq("id", idVal)
-    : await supabase.from("water_data").insert([data]);
+  ? await supabase.from("water_data").update(data).eq("id", parseInt(idVal))
+  : await supabase.from("water_data").insert([data]);
 
   if (result.error) return alert("保存エラー: " + result.error.message);
 
