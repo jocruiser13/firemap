@@ -225,18 +225,6 @@
       }
     }
 
-    // 長押しで緯度経度自動入力
-    let holdTimer;
-    function setCoords(latlng) {
-      document.getElementById("lat").value = latlng.lat.toFixed(6);
-      document.getElementById("lng").value = latlng.lng.toFixed(6);
-      document.getElementById("form-area").style.display = "block";
-    }
-    map.on("mousedown", e => holdTimer = setTimeout(() => setCoords(e.latlng), 800));
-    map.on("mouseup", () => clearTimeout(holdTimer));
-    map.on("touchstart", e => holdTimer = setTimeout(() => setCoords(e.latlng), 800));
-    map.on("touchend", () => clearTimeout(holdTimer));
-
     renderAll();
   </script>
 </body>
