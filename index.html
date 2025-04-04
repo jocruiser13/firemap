@@ -199,6 +199,7 @@
 
   form.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const data = {
     area: document.getElementById("input-area").value,
     name: document.getElementById("input-name").value,
@@ -214,14 +215,18 @@
 
   const idVal = document.getElementById("input-id").value;
   const result = idVal
-  ? await supabase.from("water_data").update(data).eq("id", parseInt(idVal)).select().single()
-  : await supabase.from("water_data").insert([data]);
+    ? await supabase.from("water_data").update(data).eq("id", parseInt(idVal)).select()
+    : await supabase.from("water_data").insert([data]);
 
-  if (result.error) return alert("保存エラー: " + result.error.message);
+  if (result.error) {
+    console.error(result.error);
+    return alert("保存エラー: " + result.error.message);
+  }
+
   alert(idVal ? "更新しました！" : "保存しました（クラウド保存）");
 
   form.reset();
-  document.getElementById("input-date").value = today;
+  document.getElementById("input-date").value = new Date().toISOString().split("T")[0];
   document.getElementById("input-id").value = "";
   renderAll();
   switchTab("map-tab");
