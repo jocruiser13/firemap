@@ -365,7 +365,8 @@
   : await supabase.from("water_data").insert([data]);
 
   if (result.error) {
-  alert("保存エラー: " + result.error.message);
+  alert("保存エラー（詳細）: " + result.error.message);
+  console.log("更新失敗の詳細:", result.error);
 } else {
   alert(idVal ? `更新成功！ 更新件数: ${result.data.length}` : "保存しました（クラウド保存）");
   console.log("更新結果データ:", result.data);
