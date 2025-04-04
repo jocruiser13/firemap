@@ -110,6 +110,7 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
       const nameVal = document.getElementById("input-name").value.trim();
       const latVal = document.getElementById("input-lat").value;
       const lngVal = document.getElementById("input-lng").value;
@@ -139,6 +140,7 @@
       if (result.error) return alert("保存エラー: " + result.error.message);
 
       alert(idVal ? "更新しました！" : "保存しました（クラウド保存）");
+
       form.reset();
       document.getElementById("input-date").value = today;
       document.getElementById("input-id").value = "";
@@ -178,7 +180,17 @@
 
         const marker = L.marker([d.lat, d.lng], { icon })
           .addTo(map)
-          .bindPopup(`<b>${d.name}</b><br>${d.type}｜${d.usable}`);
+          .bindPopup(`
+            <strong>${d.name}</strong><br>
+            種類: ${d.type}<br>
+            利用可否: ${d.usable}<br>
+            静水圧: ${d.pressure ?? '未入力'} MPa<br>
+            容量: ${d.capacity ?? '未入力'} t<br>
+            備考: ${d.note || 'なし'}<br>
+            緯度: ${d.lat}<br>
+            経度: ${d.lng}<br>
+            更新日: ${d.date}
+          `);
         marker._customId = d.name;
         markers.push(marker);
 
