@@ -98,33 +98,43 @@
     });
 
     form.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const data = {
-        name: name.value,
-        type: type.value,
-        usable: usable.value,
-        pressure: parseFloat(pressure.value),
-        capacity: parseFloat(capacity.value),
-        note: note.value,
-        lat: parseFloat(lat.value),
-        lng: parseFloat(lng.value),
-        date: date.value
-      };
+  e.preventDefault();
 
-      const idVal = document.getElementById("id").value;
-      if (idVal) {
-        await supabase.from("water_data").update(data).eq("id", idVal);
-        alert("更新しました！");
-      } else {
-        await supabase.from("water_data").insert([data]);
-        alert("保存しました（クラウド保存）");
-      }
+  const data = {
+    name: name.value,
+    type: type.value,
+    usable: usable.value,
+    pressure: parseFloat(pressure.value),
+    capacity: parseFloat(capacity.value),
+    note: note.value,
+    lat: parseFloat(lat.value),
+    lng: parseFloat(lng.value),
+    date: date.value
+  };
 
-      form.reset();
-      document.getElementById("date").value = today;
-      document.getElementById("id").value = "";
-      renderAll();
-    });
+  const idVal = document.getElementById("id").value;
+  let result;
+
+  if (idVal) {
+    result = await supabase.from("water_data").update(data).eq("id", idVal);
+  } else {
+    result = await supabase.from("water_data").insert([data]);
+  }
+
+  if (result.error) {
+    alert("保存エラー：" + result.error.message);
+    console.error("Supabaseエラー詳細:", result.error);
+    return;
+  }
+
+  alert(idVal ? "更新しました！" : "保存しました（クラウド保存）");
+
+  form.reset();
+  document.getElementById("date").value = new Date().toISOString().split("T")[0];
+  document.getElementById("id").value = "";
+
+  renderAll();
+});
 
     async function renderAll() {
       const { data, error } = await supabase.from("water_data").select("*").order("id", { ascending: true });
