@@ -6,19 +6,21 @@
   <title>消防水利マップ</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"></script>
-  <style>
-  body { margin: 0; font-family: sans-serif; }
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"></<style>
+  body {
+    margin: 0;
+    font-family: sans-serif;
+  }
 
   header {
-    display: flex;
-    background: #2196f3;
-    color: white;
-    font-weight: bold;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
+    display: flex;
+    background: #2196f3;
+    color: white;
+    font-weight: bold;
     z-index: 1000;
   }
 
@@ -32,17 +34,18 @@
   .tab-content {
     display: none;
     padding: 10px;
-    margin-top: 50px; /* ヘッダー高さと同じだけ余白をとる */
+    margin-top: 50px; /* ヘッダーの高さ分だけ下げる */
   }
 
   #map {
-    height: calc(100vh - 50px); /* ヘッダーの高さを差し引いた地図サイズ */
+    height: calc(100vh - 50px); /* ヘッダーの高さ分だけ縮める */
   }
 
   input, select, textarea, button {
     width: 100%;
     margin: 6px 0;
     padding: 6px;
+    font-size: 1em;
   }
 
   table {
