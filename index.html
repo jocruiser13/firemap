@@ -200,7 +200,10 @@
   form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const idVal = document.getElementById("input-id").value;
+  const idValRaw = document.getElementById("input-id").value;
+  const idVal = idValRaw ? parseInt(idValRaw) : null;
+  console.log("送信前のID:", idVal); // ← これで確認
+
   const data = {
     area: document.getElementById("input-area").value,
     name: document.getElementById("input-name").value,
@@ -220,11 +223,11 @@
     result = await supabase
       .from("water_data")
       .update(data)
-      .eq("id", parseInt(idVal));
-    
-    if (result.error) {
-      console.error(result.error);
-      return alert("更新エラー: " + result.error.message);
+      .eq("id", idVal);
+
+    if (result.error || result.data?.length === 0) {
+      console.error("更新エラー:", result);
+      return alert("更新エラー（idが一致しませんでした）");
     }
 
     alert("更新しました！");
@@ -234,7 +237,7 @@
       .insert([data]);
 
     if (result.error) {
-      console.error(result.error);
+      console.error("保存エラー:", result.error);
       return alert("保存エラー: " + result.error.message);
     }
 
@@ -244,7 +247,7 @@
   form.reset();
   document.getElementById("input-date").value = new Date().toISOString().split("T")[0];
   document.getElementById("input-id").value = "";
-  await renderAll();  // ←ここを await にするのがポイント！
+  await renderAll();
   switchTab("map-tab");
 });
 
