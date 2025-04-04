@@ -331,18 +331,16 @@
     const form = document.getElementById("waterForm");
     const markers = [];
 
-   form.addEventListener("submit", async (e) => {
+  form.addEventListener("submit", async (e) => {
   e.preventDefault();
   alert("送信ボタンが押されました");
 
   const nameVal = document.getElementById("input-name").value.trim();
   const latVal = document.getElementById("input-lat").value;
   const lngVal = document.getElementById("input-lng").value;
+  const idVal = document.getElementById("input-id").value;
 
-  if (!nameVal || !latVal || !lngVal) {
-    alert("名称、緯度、経度を入力してください");
-    return;
-  }
+  alert("input-id: " + idVal);
 
   const data = {
     name: nameVal,
@@ -357,27 +355,30 @@
     date: document.getElementById("input-date").value
   };
 
-  const idVal = document.getElementById("input-id").value;
-  alert("input-id: " + idVal);
+  let result;
+  if (idVal) {
+    alert("更新モードに入りました");
+    result = await supabase.from("water_data").update(data).eq("id", idVal);
+  } else {
+    alert("新規保存モードに入りました");
+    result = await supabase.from("water_data").insert([data]);
+  }
 
-  const result = idVal
-  ? await supabase.from("water_data").update(data).eq("id", idVal)
-  : await supabase.from("water_data").insert([data]);
+  alert("Supabaseからの返り値: " + JSON.stringify(result));
 
-alert("result: " + JSON.stringify(result)); 
   if (result.error) {
-  alert("保存エラー（詳細）: " + result.error.message);
-  console.log("更新失敗の詳細:", result.error);
-} else {
-  alert(idVal ? `更新成功！ 更新件数: ${result.data.length}` : "保存しました（クラウド保存）");
-  console.log("更新結果データ:", result.data);
-}
+    alert("保存エラー: " + result.error.message);
+    return;
+  }
+
+  alert(idVal ? "更新しました！" : "保存しました（クラウド保存）");
 
   form.reset();
   document.getElementById("input-date").value = today;
   document.getElementById("input-id").value = "";
   renderAll();
-  switchTab('map-tab');
+  switchTab("map-tab");
+});
 });   async function renderAll() {
   alert("renderAll が呼び出されました");
 
