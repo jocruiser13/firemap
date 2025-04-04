@@ -230,7 +230,17 @@
 
     function editData(index) {
       const data = JSON.parse(localStorage.getItem("waterData") || "[]")[index];
-      if (!data) return;
+      if (!data) return;for (let key in data) {
+  if (form.elements[key]) {
+    if (form.elements[key].tagName === "SELECT") {
+      Array.from(form.elements[key].options).forEach(opt => {
+        opt.selected = opt.value === data[key];
+      });
+    } else {
+      form.elements[key].value = data[key];
+    }
+  }
+}
       for (let key in data) {
         if (form.elements[key]) {
           form.elements[key].value = data[key];
