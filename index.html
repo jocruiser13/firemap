@@ -419,36 +419,37 @@
     }
 
     function renderTable(data) {
-      const dataList = document.getElementById("dataList");
-      dataList.innerHTML = "";
+  alert("renderTable に入りました");
+  const dataList = document.getElementById("dataList");
+  dataList.innerHTML = "";
 
-      const table = document.createElement("table");
-      table.innerHTML = `
-        <tr>
-          <th>行政区分</th><th>名称</th><th>種類</th><th>利用可否</th>
-          <th>静水圧</th><th>容量</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th>
-        </tr>`;
+  const table = document.createElement("table");
+  table.innerHTML = `
+    <tr>
+      <th>行政区分</th><th>名称</th><th>種類</th><th>利用可否</th>
+      <th>静水圧</th><th>容量</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th>
+    </tr>`;
 
-      data.forEach(d => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${d.area}</td>
-          <td>${d.name}</td>
-          <td>${d.type}</td>
-          <td>${d.usable}</td>
-          <td>${d.pressure ?? ''}</td>
-          <td>${d.capacity ?? ''}</td>
-          <td>${d.lat}</td>
-          <td>${d.lng}</td>
-          <td>${d.date}</td>
-          <td>
-            <button onclick="window.editData(${d.id})">編集</button>
-            <button onclick="window.deleteData(${d.id})">削除</button>
-          </td>`;
-        table.appendChild(row);
-      });
-      dataList.appendChild(table);
-    }
+  data.forEach(d => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${d.area}</td>
+      <td>${d.name}</td>
+      <td>${d.type}</td>
+      <td>${d.usable}</td>
+      <td>${d.pressure ?? ''}</td>
+      <td>${d.capacity ?? ''}</td>
+      <td>${d.lat}</td>
+      <td>${d.lng}</td>
+      <td>${d.date}</td>
+      <td>
+        <button onclick="window.editData(${d.id})">編集</button>
+        <button onclick="window.deleteData(${d.id})">削除</button>
+      </td>`;
+    table.appendChild(row);
+  });
+  dataList.appendChild(table);
+}
 
     window.editData = async function(id) {
   alert("編集ボタンが押されました！ID: " + id);
