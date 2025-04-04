@@ -36,7 +36,7 @@
     <h2>水利情報の入力</h2>
     <form id="waterForm">
       <input type="hidden" id="id" />
-      <label>名称：<input type="text" id="name" required /></label><br><br>
+      <label>名称：<input type="text" id="waterName" required /></label><br><br>
       <label>種類：
         <select id="type">
           <option value="消火栓">消火栓</option>
@@ -88,17 +88,22 @@
 
     let markers = [];
 
-    const form = document.getElementById("waterForm");
-    const toggleBtn = document.getElementById("toggle-form-btn");
-    toggleBtn.addEventListener("click", () => {
+    document.getElementById("toggle-form-btn").addEventListener("click", () => {
       const formArea = document.getElementById("form-area");
       formArea.style.display = formArea.style.display === "none" ? "block" : "none";
     });
 
-    form.addEventListener("submit", async (e) => {
+    document.getElementById("waterForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      const nameValue = document.getElementById("waterName").value.trim();
+      if (!nameValue) {
+        alert("名称を入力してください");
+        return;
+      }
+
       const data = {
-        name: name.value,
+        name: nameValue,
         type: type.value,
         usable: usable.value,
         pressure: parseFloat(pressure.value),
@@ -108,8 +113,9 @@
         lng: parseFloat(lng.value),
         date: date.value,
       };
+
       const idVal = document.getElementById("id").value;
-      let result = idVal
+      const result = idVal
         ? await supabase.from("water_data").update(data).eq("id", idVal)
         : await supabase.from("water_data").insert([data]);
 
@@ -120,7 +126,7 @@
       }
 
       alert(idVal ? "更新しました！" : "保存しました（クラウド保存）");
-      form.reset();
+      document.getElementById("waterForm").reset();
       document.getElementById("date").value = today;
       document.getElementById("id").value = "";
       renderAll();
@@ -176,11 +182,16 @@
     window.editData = async function(id) {
       const { data, error } = await supabase.from("water_data").select("*").eq("id", id).single();
       if (error || !data) return alert("読み込みエラー");
-      Object.entries(data).forEach(([key, value]) => {
-        if (document.getElementById(key)) {
-          document.getElementById(key).value = value;
-        }
-      });
+      document.getElementById("id").value = data.id;
+      document.getElementById("waterName").value = data.name;
+      document.getElementById("type").value = data.type;
+      document.getElementById("usable").value = data.usable;
+      document.getElementById("pressure").value = data.pressure;
+      document.getElementById("capacity").value = data.capacity;
+      document.getElementById("note").value = data.note;
+      document.getElementById("lat").value = data.lat;
+      document.getElementById("lng").value = data.lng;
+      document.getElementById("date").value = data.date;
       document.getElementById("form-area").style.display = "block";
     };
 
