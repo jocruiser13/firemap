@@ -16,6 +16,7 @@
     #map {
       width: 100%;
       height: 100vh;
+      transition: height 0.3s;
     }
     #form-area, #list-area {
       padding: 10px;
@@ -134,6 +135,7 @@
       const isHidden = formArea.style.display === "none";
       formArea.style.display = isHidden ? "block" : "none";
       listArea.style.display = isHidden ? "block" : "none";
+      document.getElementById("map").style.height = isHidden ? "50vh" : "100vh";
       toggleBtn.textContent = isHidden ? "− 水利情報を隠す" : "＋ 水利情報を表示";
       map.invalidateSize();
     });
@@ -217,73 +219,4 @@
         return;
       }
 
-      let html = "<table><tr><th>名称</th><th>種類</th><th>利用可否</th><th>静水圧（MPa）</th><th>容量（t）</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th></tr>";
-      data.forEach((d, i) => {
-        html += `<tr>
-          <td>${d.name}</td>
-          <td>${d.type}</td>
-          <td>${d.usable}</td>
-          <td>${d.pressure}</td>
-          <td>${d.capacity}</td>
-          <td>${d.lat}</td>
-          <td>${d.lng}</td>
-          <td>${d.date}</td>
-          <td>
-            <button class="btn-small" onclick="editData(${i})">編集</button>
-            <button class="btn-small" onclick="deleteData(${i})">削除</button>
-          </td>
-        </tr>`;
-      });
-      html += "</table>";
-      dataList.innerHTML = html;
-    }
-
-    function deleteData(index) {
-      if (!confirm("この水利情報を削除しますか？")) return;
-      let data = JSON.parse(localStorage.getItem("waterData") || "[]");
-      data.splice(index, 1);
-      localStorage.setItem("waterData", JSON.stringify(data));
-      renderAll();
-    }
-
-    function editData(index) {
-      const data = JSON.parse(localStorage.getItem("waterData") || "[]")[index];
-      if (!data) return;
-
-      document.getElementById("name").value = data.name || "";
-      document.getElementById("type").value = data.type || "";
-      document.getElementById("usable").value = data.usable || "";
-      document.getElementById("pressure").value = data.pressure || "";
-      document.getElementById("capacity").value = data.capacity || "";
-      document.getElementById("note").value = data.note || "";
-      document.getElementById("lat").value = data.lat || "";
-      document.getElementById("lng").value = data.lng || "";
-      document.getElementById("date").value = data.date || "";
-      document.getElementById("index").value = index;
-    }
-
-    function populateSearchSelect() {
-      const select = document.getElementById("searchSelect");
-      select.innerHTML = '<option value="">選択してください</option>';
-      const data = JSON.parse(localStorage.getItem("waterData") || "[]");
-      data.forEach((d) => {
-        const option = document.createElement("option");
-        option.value = d.name;
-        option.textContent = d.name;
-        select.appendChild(option);
-      });
-    }
-
-    function searchMarker() {
-      const name = document.getElementById("searchSelect").value;
-      const marker = markers.find(m => m._customId === name);
-      if (marker) {
-        map.setView(marker.getLatLng(), 18);
-        marker.openPopup();
-      }
-    }
-
-    renderAll();
-  </script>
-</body>
-</html>
+      let html = "<table><tr><th>
