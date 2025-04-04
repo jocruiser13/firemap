@@ -332,44 +332,53 @@
     const markers = [];
 
     form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const nameVal = document.getElementById("input-name").value.trim();
-      const latVal = document.getElementById("input-lat").value;
-      const lngVal = document.getElementById("input-lng").value;
+  e.preventDefault();
 
-      if (!nameVal || !latVal || !lngVal) {
-        alert("名称、緯度、経度を入力してください");
-        return;
-      }
+  const nameVal = document.getElementById("input-name").value.trim();
+  const latVal = document.getElementById("input-lat").value;
+  const lngVal = document.getElementById("input-lng").value;
 
-      const data = {
-        name: nameVal,
-        area: document.getElementById("input-area").value,
-        type: document.getElementById("input-type").value,
-        usable: document.getElementById("input-usable").value,
-        pressure: parseFloat(document.getElementById("input-pressure").value),
-        capacity: parseFloat(document.getElementById("input-capacity").value),
-        note: document.getElementById("input-note").value,
-        lat: parseFloat(latVal),
-        lng: parseFloat(lngVal),
-        date: document.getElementById("input-date").value
-      };
+  if (!nameVal || !latVal || !lngVal) {
+    alert("名称、緯度、経度を入力してください");
+    return;
+  }
 
-      const idVal = document.getElementById("input-id").value;
-      const result = idVal
-        ? await supabase.from("water_data").update(data).eq("id", idVal)
-        : await supabase.from("water_data").insert([data]);
+  const data = {
+    name: nameVal,
+    area: document.getElementById("input-area").value,
+    type: document.getElementById("input-type").value,
+    usable: document.getElementById("input-usable").value,
+    pressure: parseFloat(document.getElementById("input-pressure").value),
+    capacity: parseFloat(document.getElementById("input-capacity").value),
+    note: document.getElementById("input-note").value,
+    lat: parseFloat(latVal),
+    lng: parseFloat(lngVal),
+    date: document.getElementById("input-date").value
+  };
 
-      if (result.error) return alert("保存エラー: " + result.error.message);
+  const idVal = document.getElementById("input-id").value;
 
-      alert(idVal ? "更新しました！" : "保存しました（クラウド保存）");
+  let result;
+  if (idVal) {
+    result = await supabase.from("water_data").update(data).eq("id", idVal);
+  } else {
+    result = await supabase.from("water_data").insert([data]);
+  }
 
-      form.reset();
-      document.getElementById("input-date").value = today;
-      document.getElementById("input-id").value = "";
-      renderAll();
-      switchTab('map-tab');
-    });    async function renderAll() {
+  if (result.error) {
+    alert("保存エラー: " + result.error.message);
+    return;
+  }
+
+  alert(idVal ? "更新しました！" : "保存しました（クラウド保存）");
+
+  form.reset();
+  document.getElementById("input-id").value = "";
+  document.getElementById("input-date").value = new Date().toISOString().split("T")[0];
+
+  await renderAll(); // ← 非同期で必ず待つ
+  switchTab('map-tab');
+});   async function renderAll() {
       const { data, error } = await supabase.from("water_data").select("*").order("id");
       if (error) return console.error("取得エラー:", error);
 
