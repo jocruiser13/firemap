@@ -53,10 +53,9 @@
           <option value="要確認">要確認</option>
         </select>
       </label><br><br>
-      <label>静水圧（MPa）：<input type="number" step="0.01" name="pressure" id="pressure" /></label><br><br>
+      <label>静水圧（MPa）：<input type="number" name="pressure" id="pressure" step="0.01" /></label><br><br>
       <label>容量（t）：<input type="number" name="capacity" id="capacity" /></label><br><br>
-      <label>備考：<textarea name="note" id="note" rows="3"></textarea></label><br><br>
-      <label>写真：<input type="file" name="photo" /></label><br><br>
+      <label>備考：<textarea name="note" id="note" rows="3" cols="30"></textarea></label><br><br>
       <label>緯度：<input type="text" name="lat" id="lat" /></label><br><br>
       <label>経度：<input type="text" name="lng" id="lng" /></label><br><br>
       <label>最終更新日：<input type="text" name="date" id="date" readonly /></label><br><br>
@@ -76,69 +75,50 @@
     </div>
     <div id="dataList"></div>
   </div>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    const SUPABASE_URL = "https://lqyqeyxujdmvcromkkbg.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxeXFleXh1amRtdmNyb21ra2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3MzUyOTIsImV4cCI6MjA1OTMxMTI5Mn0.2IxvU0Z49fJhvfn-Eey_PDdeUvYqDgDilIoudN9MGkU";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     const map = L.map('map').setView([34.483955, 133.931957], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    const locateBtn = L.control({ position: 'topright' });
-    locateBtn.onAdd = function () {
-      const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-      div.innerHTML = '<button title="現在地" style="background:white;border:none;padding:6px;">📍</button>';
-      div.onclick = function () {
-        map.locate({ setView: true, maxZoom: 18 });
-      };
-      return div;
-    };
-    locateBtn.addTo(map);
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("date").value = today;
 
-    map.on('locationfound', function (e) {
-      L.circleMarker(e.latlng, {
-        radius: 8, color: '#3388ff', fillColor: '#3388ff', fillOpacity: 0.8
-      }).addTo(map).bindPopup("現在地").openPopup();
-    });
+    let markers = [];
+
+    const form = document.getElementById("waterForm");
 
     document.getElementById("toggle-form-btn").addEventListener("click", () => {
       const formArea = document.getElementById("form-area");
       formArea.style.display = (formArea.style.display === "none") ? "block" : "none";
     });
 
-    const today = new Date().toISOString().split("T")[0];
-    document.getElementById("date").value = today;
-
-    const { createClient } = supabase;
-    const supabaseUrl = "https://lqyqeyxujdmvcromkkbg.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxeXFleXh1amRtdmNyb21ra2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3MzUyOTIsImV4cCI6MjA1OTMxMTI5Mn0.2IxvU0Z49fJhvfn-Eey_PDdeUvYqDgDilIoudN9MGkU";
-    const supabaseClient = createClient(supabaseUrl, supabaseKey);
-
-    const form = document.getElementById("waterForm");
-    const dataList = document.getElementById("dataList");
-    const markers = [];
-
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
-      const id = document.getElementById("id").value;
       const data = {
-        name: form.name.value,
-        type: form.type.value,
-        usable: form.usable.value,
-        pressure: parseFloat(form.pressure.value),
-        capacity: parseFloat(form.capacity.value),
-        note: form.note.value,
-        lat: parseFloat(form.lat.value),
-        lng: parseFloat(form.lng.value),
-        date: form.date.value,
+        name: document.getElementById("name").value,
+        type: document.getElementById("type").value,
+        usable: document.getElementById("usable").value,
+        pressure: parseFloat(document.getElementById("pressure").value),
+        capacity: parseFloat(document.getElementById("capacity").value),
+        note: document.getElementById("note").value,
+        lat: parseFloat(document.getElementById("lat").value),
+        lng: parseFloat(document.getElementById("lng").value),
+        date: document.getElementById("date").value
       };
 
+      const id = document.getElementById("id").value;
       if (id) {
-        await supabaseClient.from("water_data").update(data).eq("id", id);
+        await supabase.from("water_data").update(data).eq("id", id);
         alert("更新しました！");
       } else {
-        await supabaseClient.from("water_data").insert(data);
-        alert("保存しました！（クラウド保存）");
+        await supabase.from("water_data").insert([data]);
+        alert("保存しました（クラウド保存）");
       }
 
       form.reset();
@@ -148,48 +128,48 @@
     });
 
     async function renderAll() {
-      const { data, error } = await supabaseClient.from("water_data").select("*");
+      const { data, error } = await supabase.from("water_data").select("*").order("id", { ascending: true });
       if (error) {
-        console.error("データ取得エラー:", error.message);
+        console.error("読み込みエラー:", error.message);
         return;
       }
+
       renderMarkers(data);
-      displayData(data);
-      populateSearchSelect(data);
+      renderList(data);
+      populateSearch(data);
     }
 
     function renderMarkers(data) {
       markers.forEach(m => map.removeLayer(m));
-      markers.length = 0;
+      markers = [];
 
-      data.forEach((d) => {
-        if (d.lat && d.lng) {
-          const iconUrl = d.type === "消火栓" ? "red" : d.type === "水槽" ? "blue" : "green";
-          const icon = new L.Icon({
-            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconUrl}.png`,
-            shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-          });
-          const marker = L.marker([d.lat, d.lng], { icon })
-            .addTo(map)
-            .bindPopup(`<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>静水圧: ${d.pressure} MPa<br>容量: ${d.capacity} t<br>備考: ${d.note || 'なし'}`);
-          marker._customId = d.name;
-          markers.push(marker);
-        }
+      data.forEach(d => {
+        const iconColor = d.type === "消火栓" ? "red" : d.type === "水槽" ? "blue" : "green";
+        const icon = new L.Icon({
+          iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconColor}.png`,
+          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
+
+        const marker = L.marker([d.lat, d.lng], { icon })
+          .addTo(map)
+          .bindPopup(`<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>静水圧: ${d.pressure} MPa<br>容量: ${d.capacity} t<br>備考: ${d.note || "なし"}`);
+        marker._customId = d.name;
+        markers.push(marker);
       });
     }
-
-    function displayData(data) {
-      if (!data || data.length === 0) {
+        function renderList(data) {
+      const dataList = document.getElementById("dataList");
+      if (data.length === 0) {
         dataList.innerHTML = "<p>保存されたデータはありません。</p>";
         return;
       }
 
-      let html = "<table><tr><th>名称</th><th>種類</th><th>利用可否</th><th>静水圧（MPa）</th><th>容量（t）</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th></tr>";
-      data.forEach((d) => {
+      let html = "<table><tr><th>名称</th><th>種類</th><th>利用可否</th><th>静水圧</th><th>容量</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th></tr>";
+      data.forEach(d => {
         html += `<tr>
           <td>${d.name}</td>
           <td>${d.type}</td>
@@ -209,32 +189,33 @@
       dataList.innerHTML = html;
     }
 
+    async function editData(id) {
+      const { data, error } = await supabase.from("water_data").select("*").eq("id", id).single();
+      if (error || !data) return alert("データの読み込みに失敗しました");
+
+      document.getElementById("id").value = data.id;
+      document.getElementById("name").value = data.name || "";
+      document.getElementById("type").value = data.type || "";
+      document.getElementById("usable").value = data.usable || "";
+      document.getElementById("pressure").value = data.pressure || "";
+      document.getElementById("capacity").value = data.capacity || "";
+      document.getElementById("note").value = data.note || "";
+      document.getElementById("lat").value = data.lat || "";
+      document.getElementById("lng").value = data.lng || "";
+      document.getElementById("date").value = data.date || "";
+      document.getElementById("form-area").style.display = "block";
+    }
+
     async function deleteData(id) {
       if (!confirm("この水利情報を削除しますか？")) return;
-      await supabaseClient.from("water_data").delete().eq("id", id);
+      await supabase.from("water_data").delete().eq("id", id);
       renderAll();
     }
 
-    async function editData(id) {
-      const { data } = await supabaseClient.from("water_data").select("*").eq("id", id).single();
-      if (!data) return;
-
-      form.id.value = data.id;
-      form.name.value = data.name || "";
-      form.type.value = data.type || "";
-      form.usable.value = data.usable || "";
-      form.pressure.value = data.pressure || "";
-      form.capacity.value = data.capacity || "";
-      form.note.value = data.note || "";
-      form.lat.value = data.lat || "";
-      form.lng.value = data.lng || "";
-      form.date.value = data.date || today;
-    }
-
-    function populateSearchSelect(data) {
+    function populateSearch(data) {
       const select = document.getElementById("searchSelect");
       select.innerHTML = '<option value="">選択してください</option>';
-      data.forEach((d) => {
+      data.forEach(d => {
         const option = document.createElement("option");
         option.value = d.name;
         option.textContent = d.name;
