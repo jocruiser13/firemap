@@ -16,7 +16,7 @@
       flex: 1; text-align: center; padding: 10px; cursor: pointer;
     }
     .tab-content { display: none; padding: 10px; }
-    #map { height: 70vh; }
+    #map { height: 60vh; } /* ← サイズ変更済み */
     input, select, textarea, button {
       width: 100%; margin: 6px 0; padding: 6px;
     }
@@ -110,7 +110,6 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-
       const nameVal = document.getElementById("input-name").value.trim();
       const latVal = document.getElementById("input-lat").value;
       const lngVal = document.getElementById("input-lng").value;
@@ -240,9 +239,12 @@
       const name = document.getElementById("searchInput").value.trim();
       const marker = markers.find(m => m._customId.includes(name));
       if (marker) {
-        map.setView(marker.getLatLng(), 18);
-        marker.openPopup();
         switchTab("map-tab");
+        setTimeout(() => {
+          map.invalidateSize(); // ← 地図崩れ防止を追加
+          map.setView(marker.getLatLng(), 18);
+          marker.openPopup();
+        }, 100);
       } else {
         alert("該当なし");
       }
