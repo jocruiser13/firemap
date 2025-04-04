@@ -95,19 +95,15 @@
 
       let markers = [];
 
-      const form = document.getElementById("waterForm");
       document.getElementById("toggle-form-btn").addEventListener("click", () => {
         const formArea = document.getElementById("form-area");
         formArea.style.display = (formArea.style.display === "none") ? "block" : "none";
       });
 
+      const form = document.getElementById("waterForm");
+
       form.addEventListener("submit", async function (e) {
         e.preventDefault();
-
-        if (!document.getElementById("lat").value || !document.getElementById("lng").value) {
-          alert("緯度と経度は必ず入力してください。");
-          return;
-        }
 
         const data = {
           name: document.getElementById("name").value,
@@ -132,16 +128,15 @@
 
         if (result.error) {
           alert("保存エラー：" + result.error.message);
-          console.error("Supabaseエラー詳細:", result.error);
+          console.error(result.error);
           return;
         }
 
         alert(idVal ? "更新しました！" : "保存しました（クラウド保存）");
 
         form.reset();
-        document.getElementById("date").value = today;
         document.getElementById("id").value = "";
-
+        document.getElementById("date").value = today;
         renderAll();
       });
 
@@ -168,11 +163,13 @@
             iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
           });
 
-          const marker = L.marker([d.lat, d.lng], { icon })
-            .addTo(map)
-            .bindPopup(`<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>静水圧: ${d.pressure} MPa<br>容量: ${d.capacity} t<br>備考: ${d.note || "なし"}`);
+          const marker = L.marker([d.lat, d.lng], {
+            icon: icon,
+            title: d.name // ← 検索ジャンプ用にtitle属性
+          }).addTo(map).bindPopup(
+            `<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>静水圧: ${d.pressure} MPa<br>容量: ${d.capacity} t<br>備考: ${d.note || "なし"}`
+          );
 
-          marker._customId = d.name;
           markers.push(marker);
         });
       }
@@ -199,11 +196,10 @@
         dataList.innerHTML = html;
       }
 
-      async function editData(id) {
+      window.editData = async function(id) {
         const { data, error } = await supabase.from("water_data").select("*").eq("id", id).single();
         if (error || !data) {
           alert("読み込みエラー");
-          console.error(error);
           return;
         }
 
@@ -221,7 +217,7 @@
         document.getElementById("form-area").style.display = "block";
       }
 
-      async function deleteData(id) {
+      window.deleteData = async function(id) {
         if (!confirm("この水利情報を削除しますか？")) return;
         await supabase.from("water_data").delete().eq("id", id);
         renderAll();
@@ -238,12 +234,14 @@
         });
       }
 
-      function searchMarker() {
+      window.searchMarker = function () {
         const name = document.getElementById("searchSelect").value;
-        const marker = markers.find(m => m._customId === name);
+        const marker = markers.find(m => m.options.title === name);
         if (marker) {
           map.setView(marker.getLatLng(), 18);
           marker.openPopup();
+        } else {
+          alert("該当の水利が見つかりません");
         }
       }
 
