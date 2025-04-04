@@ -321,15 +321,6 @@
 
   switchTab("form-tab");
 };
-    if (error) return alert("取得エラー");
-    for (const key in data) {
-      const input = document.getElementById("input-" + key);
-      if (input) input.value = data[key];
-    }
-    document.getElementById("input-id").value = id;
-    switchTab("form-tab");
-  };
-
   window.deleteData = async function(id) {
     if (!confirm("この水利情報を削除しますか？")) return;
     await supabase.from("water_data").delete().eq("id", id);
