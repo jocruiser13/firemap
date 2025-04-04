@@ -83,9 +83,15 @@
     document.getElementById("input-date").value = today;
 
     window.switchTab = function (id) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-      document.getElementById(id).style.display = 'block';
-    };
+  document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+
+  if (id === "map-tab") {
+    setTimeout(() => {
+      map.invalidateSize(); // 地図のサイズを正しく再計算
+    }, 100);
+  }
+};
     switchTab('map-tab');
 
     const map = L.map('map', { zoomControl: false }).setView([34.483955, 133.931957], 16);
