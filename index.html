@@ -33,5 +33,56 @@
       .bindPopup("深山公園中心")
       .openPopup();
   </script>
-</body>
+<!-- 消防水利の入力フォーム -->
+<div style="padding: 10px; background: #f2f2f2;">
+  <h2>水利情報の入力</h2>
+  <form id="waterForm">
+    <label>名称：<input type="text" name="name" required /></label><br><br>
+    
+    <label>種類：
+      <select name="type">
+        <option value="消火栓">消火栓</option>
+        <option value="水槽">水槽</option>
+        <option value="その他">その他</option>
+      </select>
+    </label><br><br>
+
+    <label>利用可否：
+      <select name="usable">
+        <option value="○">○</option>
+        <option value="×">×</option>
+        <option value="要確認">要確認</option>
+      </select>
+    </label><br><br>
+
+    <label>静水圧（kPa）：<input type="number" name="pressure" /></label><br><br>
+    <label>容量（L）：<input type="number" name="capacity" /></label><br><br>
+    
+    <label>備考：<br>
+      <textarea name="note" rows="3" cols="30"></textarea>
+    </label><br><br>
+
+    <label>写真：<input type="file" name="photo" /></label><br><br>
+    
+    <label>緯度：<input type="text" name="lat" id="lat" readonly /></label><br><br>
+    <label>経度：<input type="text" name="lng" id="lng" readonly /></label><br><br>
+    
+    <label>最終更新日：<input type="text" name="date" id="date" readonly /></label><br><br>
+
+    <button type="submit">送信（まだ保存されません）</button>
+  </form>
+</div>
+
+<script>
+  // 位置情報と日付の自動入力
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function (position) {
+      document.getElementById("lat").value = position.coords.latitude.toFixed(6);
+      document.getElementById("lng").value = position.coords.longitude.toFixed(6);
+    });
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("date").value = today;
+</script></body>
 </html>
