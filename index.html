@@ -392,7 +392,7 @@
       window._allWaterData = data; // 検索用に全体保持
     }
 
-    function renderMarkers(data) {
+    function renderMarkers(data) {  alert("renderMarkers が呼ばれました。件数: " + data.length);
       data.forEach(d => {
         const iconColor = d.type === "消火栓" ? "red" : d.type === "水槽" ? "blue" : "green";
         const icon = new L.Icon({
@@ -421,7 +421,7 @@
     function renderTable(data) {
   alert("renderTable に入りました");
   const dataList = document.getElementById("dataList");
-  dataList.innerHTML = "";
+  dataList.innerHTML = "";  alert("renderTable に渡された件数: " + data.length);
 
   const table = document.createElement("table");
   table.innerHTML = `
