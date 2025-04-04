@@ -80,9 +80,10 @@
     document.addEventListener("DOMContentLoaded", async () => {
       const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
 
-      const SUPABASE_URL = "https://lqyqeyxujdmvcromkkbg.supabase.co";
-      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxeXFleXh1amRtdmNyb21ra2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3MzUyOTIsImV4cCI6MjA1OTMxMTI5Mn0.2IxvU0Z49fJhvfn-Eey_PDdeUvYqDgDilIoudN9MGkU";
-      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+      const supabase = createClient(
+        "https://lqyqeyxujdmvcromkkbg.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxeXFleXh1amRtdmNyb21ra2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3MzUyOTIsImV4cCI6MjA1OTMxMTI5Mn0.2IxvU0Z49fJhvfn-Eey_PDdeUvYqDgDilIoudN9MGkU"
+      );
 
       const map = L.map('map').setView([34.483955, 133.931957], 16);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -103,6 +104,11 @@
       form.addEventListener("submit", async function (e) {
         e.preventDefault();
 
+        if (!document.getElementById("lat").value || !document.getElementById("lng").value) {
+          alert("緯度と経度は必ず入力してください。");
+          return;
+        }
+
         const data = {
           name: document.getElementById("name").value,
           type: document.getElementById("type").value,
@@ -114,8 +120,6 @@
           lng: parseFloat(document.getElementById("lng").value),
           date: document.getElementById("date").value
         };
-
-        console.log("送信データ:", data);
 
         const idVal = document.getElementById("id").value;
         let result;
@@ -167,6 +171,7 @@
           const marker = L.marker([d.lat, d.lng], { icon })
             .addTo(map)
             .bindPopup(`<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>静水圧: ${d.pressure} MPa<br>容量: ${d.capacity} t<br>備考: ${d.note || "なし"}`);
+
           marker._customId = d.name;
           markers.push(marker);
         });
@@ -196,13 +201,23 @@
 
       async function editData(id) {
         const { data, error } = await supabase.from("water_data").select("*").eq("id", id).single();
-        if (error || !data) return alert("読み込みエラー");
-
-        for (const key in data) {
-          if (document.getElementById(key)) {
-            document.getElementById(key).value = data[key];
-          }
+        if (error || !data) {
+          alert("読み込みエラー");
+          console.error(error);
+          return;
         }
+
+        document.getElementById("id").value = data.id;
+        document.getElementById("name").value = data.name || "";
+        document.getElementById("type").value = data.type || "";
+        document.getElementById("usable").value = data.usable || "";
+        document.getElementById("pressure").value = data.pressure || "";
+        document.getElementById("capacity").value = data.capacity || "";
+        document.getElementById("note").value = data.note || "";
+        document.getElementById("lat").value = data.lat || "";
+        document.getElementById("lng").value = data.lng || "";
+        document.getElementById("date").value = data.date || "";
+
         document.getElementById("form-area").style.display = "block";
       }
 
