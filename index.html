@@ -34,7 +34,6 @@
 <body>
   <div id="map"></div>
 
-  <!-- 入力フォームは script タグの後に置くのが安全 -->
   <div id="form-area">
     <h2>水利情報の入力</h2>
     <form id="waterForm">
@@ -65,66 +64,51 @@
 
       <label>写真：<input type="file" name="photo" /></label><br><br>
 
-      <label>緯度：<input type="text" name="lat" id="lat" readonly /></label><br><br>
-      <label>経度：<input type="text" name="lng" id="lng" readonly /></label><br><br>
+      <label>緯度：<input type="text" name="lat" id="lat" /></label><br><br>
+      <label>経度：<input type="text" name="lng" id="lng" /></label><br><br>
 
       <label>最終更新日：<input type="text" name="date" id="date" readonly /></label><br><br>
 
-      <button type="submit">送信（まだ保存されません）</button>
+      <button type="submit">送信（ローカル保存）</button>
     </form>
   </div>
 
-  <!-- 地図表示のJS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([34.5202892, 133.9285805], 16); // 深山公園
-
+    // 地図の初期化（深山公園）
+    const map = L.map('map').setView([34.483955, 133.931957], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    L.marker([34.5202892, 133.9285805])
+    L.marker([34.483955, 133.931957])
       .addTo(map)
       .bindPopup("深山公園中心")
       .openPopup();
-  </script>
-<script>
-  // 位置情報と日付の自動入力
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function (position) {
-      document.getElementById("lat").value = position.coords.latitude.toFixed(6);
-      document.getElementById("lng").value = position.coords.longitude.toFixed(6);
-    });
-  }
 
-  const today = new Date().toISOString().split("T")[0];
-  document.getElementById("date").value = today;
-
-  // フォーム送信イベントを処理
-  document.getElementById("waterForm").addEventListener("submit", function (e) {
-    e.preventDefault(); // デフォルトの送信を止める
-
-    const formData = new FormData(e.target);
-    const data = {};
-    formData.forEach((value, key) => {
-      data[key] = value;
-    });
-
-    // ローカルストレージに保存
-    const existing = JSON.parse(localStorage.getItem("waterData") || "[]");
-    existing.push(data);
-    localStorage.setItem("waterData", JSON.stringify(existing));
-
-    alert("保存しました！（ローカル保存）");
-
-    // 入力内容をリセット
-    e.target.reset();
-    document.getElementById("lat").value = "";
-    document.getElementById("lng").value = "";
+    // 最終更新日 自動入力
+    const today = new Date().toISOString().split("T")[0];
     document.getElementById("date").value = today;
-  });
-</script>
-  
-  
+
+    // フォーム送信時：ローカル保存
+    document.getElementById("waterForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      const existing = JSON.parse(localStorage.getItem("waterData") || "[]");
+      existing.push(data);
+      localStorage.setItem("waterData", JSON.stringify(existing));
+
+      alert("保存しました！（ローカル保存）");
+
+      e.target.reset();
+      document.getElementById("date").value = today;
+    });
+  </script>
 </body>
 </html>
