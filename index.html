@@ -47,6 +47,9 @@
       margin: 2px 0;
       font-size: 0.8em;
     }
+    #search-area {
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -84,6 +87,14 @@
 
   <div id="list-area">
     <h2>保存済み水利一覧</h2>
+
+    <div id="search-area">
+      <label>名称検索：
+        <input type="text" id="searchName" placeholder="例：◯◯水槽や◯◯消火栓" />
+      </label>
+      <button onclick="searchMarker()">ジャンプ</button>
+    </div>
+
     <div id="dataList"></div>
   </div>
 
@@ -167,13 +178,14 @@
       markers = [];
 
       const data = JSON.parse(localStorage.getItem("waterData") || "[]");
-      data.forEach(d => {
+      data.forEach((d, i) => {
         if (d.lat && d.lng) {
           const icon = icons[d.type] || icons["その他"];
           const popupText = `<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>静水圧: ${d.pressure} MPa<br>容量: ${d.capacity} t<br>備考: ${d.note || 'なし'}`;
           const marker = L.marker([parseFloat(d.lat), parseFloat(d.lng)], { icon })
             .addTo(map)
             .bindPopup(popupText);
+          marker._customId = d.name;
           markers.push(marker);
         }
       });
@@ -224,6 +236,19 @@
         }
       }
       document.getElementById("index").value = index;
+    }
+
+    function searchMarker() {
+      const name = document.getElementById("searchName").value.trim();
+      if (!name) return;
+
+      const marker = markers.find(m => m._customId === name);
+      if (marker) {
+        map.setView(marker.getLatLng(), 18);
+        marker.openPopup();
+      } else {
+        alert("該当する名称が見つかりませんでした。");
+      }
     }
 
     renderAll();
