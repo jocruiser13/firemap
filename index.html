@@ -92,15 +92,10 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // 地図の初期化
     const map = L.map('map').setView([34.483955, 133.931957], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-    L.marker([34.483955, 133.931957])
-      .addTo(map)
-      .bindPopup("深山公園中心")
-      .openPopup();
 
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("date").value = today;
@@ -126,6 +121,7 @@
       document.getElementById("date").value = today;
 
       displayData();
+      renderMarkers();
     });
 
     function displayData() {
@@ -149,11 +145,24 @@
         </tr>`;
       });
       html += "</table>";
-
       dataList.innerHTML = html;
     }
 
-    displayData(); // 初回読み込み時に表示
+    function renderMarkers() {
+      const data = JSON.parse(localStorage.getItem("waterData") || "[]");
+      data.forEach(d => {
+        if (d.lat && d.lng) {
+          const popupText = `<strong>${d.name}</strong><br>種類: ${d.type}<br>可否: ${d.usable}<br>備考: ${d.note || 'なし'}`;
+          L.marker([parseFloat(d.lat), parseFloat(d.lng)])
+            .addTo(map)
+            .bindPopup(popupText);
+        }
+      });
+    }
+
+    // 初期表示
+    displayData();
+    renderMarkers();
   </script>
 </body>
 </html>
