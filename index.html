@@ -5,146 +5,129 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>消防水利マップ</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"></script>
   <style>
-    body { margin: 0; font-family: sans-serif; }
-    header { display: flex; background: #2196f3; color: white; font-weight: bold; }
-    header div { flex: 1; text-align: center; padding: 10px; cursor: pointer; }
-    .tab-content { display: none; padding: 10px; }
-    #map { height: 60vh; }
-    input, select, textarea, button {
-      width: 100%; margin: 6px 0; padding: 6px;
+    html, body {
+      margin: 0; padding: 0; height: 100%; font-family: sans-serif;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
-    th, td { border: 1px solid #ccc; padding: 6px; }
-    th { background: #eee; }
-    .section-header {
-      background: #eee; padding: 10px; cursor: pointer;
-      font-weight: bold; border: 1px solid #ccc; margin-top: 10px;
+    #map {
+      height: 100vh;
+      width: 100%;
     }
-    .section-body { display: none; margin-bottom: 10px; }
+    #menuToggle {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: #2196f3;
+      color: white;
+      border: none;
+      font-size: 1.5em;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    #menuContent {
+      position: fixed;
+      top: 60px;
+      left: 10px;
+      z-index: 1000;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      display: none;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    #searchBar {
+      position: fixed;
+      top: 10px;
+      left: 60px;
+      right: 10px;
+      z-index: 1000;
+    }
+    #searchBar input {
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9em;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      vertical-align: top;
+    }
+    th {
+      background: #eee;
+    }
+    .folder-section {
+      margin-top: 10px;
+    }
+    .folder-header {
+      font-weight: bold;
+      cursor: pointer;
+      background: #ddd;
+      padding: 5px;
+      margin-top: 10px;
+    }
+    .folder-body {
+      display: none;
+    }
   </style>
 </head>
-<body>
-  <header>
-    <div onclick="switchTab('map-tab')">地図</div>
-    <div onclick="switchTab('form-tab')">追加</div>
-    <div onclick="switchTab('list-tab')">一覧</div>
-  </header>
-
-  <div id="map-tab" class="tab-content">
-    <div id="map"></div>
+<body>  <button id="menuToggle"><i class="fas fa-bars"></i></button>
+  <div id="searchBar">
+    <input type="text" id="searchInput" placeholder="名称で検索" />
   </div>
-
-  <div id="form-tab" class="tab-content">
-    <h2>水利情報の追加</h2>
-    <form id="waterForm">
-      <input type="hidden" id="input-id" />
-      <label>名称：<input type="text" id="input-name" required /></label>
-      <label>種類：
-        <select id="input-type">
-          <option value="消火栓">消火栓</option>
-          <option value="水槽">水槽</option>
-          <option value="その他">その他</option>
-        </select>
-      </label>
-      <label>利用可否：
-        <select id="input-usable">
-          <option value="○">○</option>
-          <option value="×">×</option>
-          <option value="要確認">要確認</option>
-        </select>
-      </label>
-      <label>静水圧（MPa）：<input type="number" id="input-pressure" step="0.01" /></label>
-      <label>容量（t）：<input type="number" id="input-capacity" /></label>
-      <label>備考：<textarea id="input-note"></textarea></label>
-      <label>緯度：<input type="text" id="input-lat" required /></label>
-      <label>経度：<input type="text" id="input-lng" required /></label>
-      <label>最終更新日：<input type="text" id="input-date" readonly /></label>
-      <button type="submit">送信（クラウド保存）</button>
-    </form>
+  <div id="menuContent">
+    <div id="folderContainer"></div>
   </div>
+  <div id="map"></div>
 
-  <div id="list-tab" class="tab-content">
-    <h2>保存済み水利一覧</h2>
-    <input type="text" id="searchInput" placeholder="名称で検索">
-    <button onclick="searchMarker()">ジャンプ</button>
-    <div id="dataList"></div>
-  </div>  <script type="module">
+  <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
     const supabase = createClient(
       "https://lqyqeyxujdmvcromkkbg.supabase.co",
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxeXFleXh1amRtdmNyb21ra2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3MzUyOTIsImV4cCI6MjA1OTMxMTI5Mn0.2IxvU0Z49fJhvfn-Eey_PDdeUvYqDgDilIoudN9MGkU"
     );
 
-    const today = new Date().toISOString().split("T")[0];
-    document.getElementById("input-date").value = today;
-
-    window.switchTab = function (id) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-      document.getElementById(id).style.display = 'block';
-    };
-    switchTab('map-tab');
-
-    const map = L.map('map').setView([34.483955, 133.931957], 16);
+    const map = L.map('map', { zoomControl: false }).setView([34.483955, 133.931957], 16);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    const form = document.getElementById("waterForm");
     const markers = [];
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const name = document.getElementById("input-name").value.trim();
-      if (!name) return alert("名称は必須です");
-
-      const data = {
-        name,
-        type: document.getElementById("input-type").value,
-        usable: document.getElementById("input-usable").value,
-        pressure: parseFloat(document.getElementById("input-pressure").value),
-        capacity: parseFloat(document.getElementById("input-capacity").value),
-        note: document.getElementById("input-note").value,
-        lat: parseFloat(document.getElementById("input-lat").value),
-        lng: parseFloat(document.getElementById("input-lng").value),
-        date: document.getElementById("input-date").value
-      };
-
-      const id = document.getElementById("input-id").value;
-      const result = id
-        ? await supabase.from("water_data").update(data).eq("id", id)
-        : await supabase.from("water_data").insert([data]);
-
-      if (result.error) return alert("保存エラー: " + result.error.message);
-
-      alert(id ? "更新しました！" : "保存しました（クラウド保存）");
-
-      form.reset();
-      document.getElementById("input-date").value = today;
-      document.getElementById("input-id").value = "";
-      renderAll();
-      switchTab('map-tab');
+    document.getElementById("menuToggle").addEventListener("click", () => {
+      const menu = document.getElementById("menuContent");
+      menu.style.display = (menu.style.display === "block") ? "none" : "block";
     });
 
-    async function renderAll() {
-      const { data, error } = await supabase.from("water_data").select("*").order("id");
-      if (error) return console.error("取得エラー:", error);      markers.forEach(m => map.removeLayer(m));
+    document.getElementById("searchInput").addEventListener("input", () => {
+      const val = document.getElementById("searchInput").value.trim();
+      const marker = markers.find(m => m._customId.includes(val));
+      if (marker) {
+        map.setView(marker.getLatLng(), 18);
+        marker.openPopup();
+      }
+    });
+
+    function renderMarkers(data) {
+      markers.forEach(m => map.removeLayer(m));
       markers.length = 0;
 
-      const sections = {
-        消火栓: [],
-        水槽: [],
-        その他: []
-      };
-
       data.forEach(d => {
-        const iconColor = d.type === "消火栓" ? "red" : d.type === "水槽" ? "blue" : "green";
+        const color = d.type === "消火栓" ? "red" : d.type === "水槽" ? "blue" : "green";
         const icon = new L.Icon({
-          iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconColor}.png`,
+          iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
           shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
           iconSize: [25, 41],
           iconAnchor: [12, 41],
@@ -152,84 +135,68 @@
           shadowSize: [41, 41]
         });
 
-        const popupText = (() => {
-          const updated = `更新日: ${d.date}<br>`;
-          const note = `備考: ${d.note || 'なし'}<br>`;
-          if (d.type === "消火栓") return `名称: ${d.name}<br>利用可否: ${d.usable}<br>静水圧: ${d.pressure} MPa<br>${note}${updated}`;
-          if (d.type === "水槽") return `名称: ${d.name}<br>利用可否: ${d.usable}<br>容量: ${d.capacity} t<br>${note}${updated}`;
-          return `名称: ${d.name}<br>${note}${updated}`;
+        const popup = (() => {
+          const base = `<strong>${d.name}</strong><br>種類: ${d.type}<br>`;
+          const note = `備考: ${d.note || 'なし'}<br>更新日: ${d.date}<br>`;
+          if (d.type === "消火栓") return base + `利用可否: ${d.usable}<br>静水圧: ${d.pressure} MPa<br>` + note;
+          if (d.type === "水槽") return base + `利用可否: ${d.usable}<br>容量: ${d.capacity} t<br>` + note;
+          return base + note;
         })();
 
-        const marker = L.marker([d.lat, d.lng], { icon }).addTo(map).bindPopup(popupText);
+        const marker = L.marker([d.lat, d.lng], { icon }).addTo(map).bindPopup(popup);
         marker._customId = d.name;
         markers.push(marker);
-        sections[d.type]?.push(d);
       });
-
-      const dataList = document.getElementById("dataList");
-      dataList.innerHTML = "";
-
-      for (const type of ["消火栓", "水槽", "その他"]) {
-        const header = document.createElement("div");
-        header.className = "section-header";
-        header.textContent = `${type}（${sections[type].length}件）`;
-        const body = document.createElement("div");
-        body.className = "section-body";
-
-        const table = document.createElement("table");
-        table.innerHTML = `<tr><th>名称</th><th>可否</th><th>静水圧</th><th>容量</th><th>緯度</th><th>経度</th><th>操作</th></tr>`;
-
-        sections[type].forEach(d => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${d.name}</td><td>${d.usable ?? ''}</td>
-            <td>${d.pressure ?? ''}</td><td>${d.capacity ?? ''}</td>
-            <td>${d.lat}</td><td>${d.lng}</td>
-            <td>
-              <button onclick="editData(${d.id})">編集</button>
-              <button onclick="deleteData(${d.id})">削除</button>
-            </td>`;
-          table.appendChild(row);
-        });
-
-        body.appendChild(table);
-        header.onclick = () => body.style.display = body.style.display === "none" ? "block" : "none";
-        dataList.appendChild(header);
-        dataList.appendChild(body);
-      }
     }
 
-    window.editData = async function(id) {
-      const { data } = await supabase.from("water_data").select("*").eq("id", id).single();
-      for (const key in data) {
-        const el = document.getElementById("input-" + key);
-        if (el) el.value = data[key];
-      }
-      switchTab("form-tab");
-    };
+    function renderFolders(data) {
+      const container = document.getElementById("folderContainer");
+      container.innerHTML = "";
+      const groups = { "消火栓": [], "水槽": [], "その他": [] };
+      data.forEach(d => groups[d.type]?.push(d));
 
-    window.deleteData = async function(id) {
-      if (!confirm("削除しますか？")) return;
-      await supabase.from("water_data").delete().eq("id", id);
-      renderAll();
-    };
+      Object.entries(groups).forEach(([type, items]) => {
+        const section = document.createElement("div");
+        section.className = "folder-section";
+        const header = document.createElement("div");
+        header.className = "folder-header";
+        header.textContent = type;
+        const body = document.createElement("div");
+        body.className = "folder-body";
 
-    window.searchMarker = function () {
-      const name = document.getElementById("searchInput").value.trim();
-      const marker = markers.find(m => m._customId.includes(name));
-      if (marker) {
-        switchTab("map-tab");
-        setTimeout(() => {
-          map.invalidateSize();
-          map.setView(marker.getLatLng(), 18);
-          marker.openPopup();
-        }, 100);
-      } else {
-        alert("該当なし");
-      }
-    };
+        items.forEach(d => {
+          const item = document.createElement("div");
+          item.textContent = d.name;
+          item.style.padding = "3px";
+          item.style.cursor = "pointer";
+          item.addEventListener("click", () => {
+            const marker = markers.find(m => m._customId === d.name);
+            if (marker) {
+              map.setView(marker.getLatLng(), 18);
+              marker.openPopup();
+            }
+          });
+          body.appendChild(item);
+        });
 
-    renderAll();
+        header.addEventListener("click", () => {
+          body.style.display = (body.style.display === "block") ? "none" : "block";
+        });
+
+        section.appendChild(header);
+        section.appendChild(body);
+        container.appendChild(section);
+      });
+    }
+
+    async function loadData() {
+      const { data, error } = await supabase.from("water_data").select("*").order("id");
+      if (error) return console.error("読み込み失敗:", error);
+      renderMarkers(data);
+      renderFolders(data);
+    }
+
+    loadData();
   </script>
 </body>
 </html>
