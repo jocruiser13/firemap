@@ -77,13 +77,13 @@
   <!-- 地図表示のJS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([34.3955, 133.931957], 16); // 深山公園
+    const map = L.map('map').setView([34.5202892, 133.9285805], 16); // 深山公園
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    L.marker([34.483955, 133.931957])
+    L.marker([34.5202892, 133.9285805])
       .addTo(map)
       .bindPopup("深山公園中心")
       .openPopup();
