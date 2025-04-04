@@ -214,8 +214,8 @@
 
   const idVal = document.getElementById("input-id").value;
   const result = idVal
-    ? await supabase.from("water_data").update(data).eq("id", parseInt(idVal))
-    : await supabase.from("water_data").insert([data]);
+  ? await supabase.from("water_data").update(data).eq("id", parseInt(idVal)).select().single()
+  : await supabase.from("water_data").insert([data]);
 
   if (result.error) return alert("保存エラー: " + result.error.message);
   alert(idVal ? "更新しました！" : "保存しました（クラウド保存）");
