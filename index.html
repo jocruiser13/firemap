@@ -198,11 +198,10 @@
   const markers = [];
 
   form.addEventListener("submit", async (e) => {
-  e.preventDefault();alert("送信前のID: " + document.getElementById("input-id").value);
+  e.preventDefault();
 
   const idValRaw = document.getElementById("input-id").value;
   const idVal = idValRaw ? parseInt(idValRaw) : null;
-  console.log("送信前のID:", idVal); // ← これで確認
 
   const data = {
     area: document.getElementById("input-area").value,
@@ -223,7 +222,8 @@
     result = await supabase
       .from("water_data")
       .update(data)
-      .eq("id", idVal);
+      .eq("id", idVal)
+      .select();
 
     if (result.error || result.data?.length === 0) {
       console.error("更新エラー:", result);
