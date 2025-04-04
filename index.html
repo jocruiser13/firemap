@@ -51,10 +51,27 @@
     #search-area {
       margin-bottom: 10px;
     }
+    #form-area {
+      display: none;
+    }
+    #toggle-form-btn {
+      margin: 10px;
+      padding: 10px;
+      background: #ff7043;
+      color: white;
+      border: none;
+      font-size: 1em;
+    }
+    .leaflet-top.leaflet-right {
+      top: 10px;
+      right: 10px;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
+
+  <button id="toggle-form-btn">＋ 水利を追加</button>
 
   <div id="form-area">
     <h2>水利情報の入力</h2>
@@ -105,6 +122,32 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
+
+    // 現在地ボタン
+    const locateBtn = L.control({ position: 'topright' });
+    locateBtn.onAdd = function () {
+      const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+      div.innerHTML = '<button title="現在地" style="background:white;border:none;padding:6px;">📍</button>';
+      div.onclick = function () {
+        map.locate({ setView: true, maxZoom: 18 });
+      };
+      return div;
+    };
+    locateBtn.addTo(map);
+
+    map.on('locationfound', function (e) {
+      L.circleMarker(e.latlng, {
+        radius: 8,
+        color: '#3388ff',
+        fillColor: '#3388ff',
+        fillOpacity: 0.8
+      }).addTo(map).bindPopup("現在地").openPopup();
+    });
+
+    document.getElementById("toggle-form-btn").addEventListener("click", () => {
+      const formArea = document.getElementById("form-area");
+      formArea.style.display = (formArea.style.display === "none") ? "block" : "none";
+    });
 
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("date").value = today;
@@ -226,7 +269,7 @@
       document.getElementById("note").value = data.note || "";
       document.getElementById("lat").value = data.lat || "";
       document.getElementById("lng").value = data.lng || "";
-      document.getElementById("date").value = data.date || today;
+      document.getElementById("date").value = data.date || "";
       document.getElementById("index").value = index;
     }
 
@@ -252,17 +295,6 @@
     }
 
     renderAll();
-  </script>
-
-  <!-- PWA: Service Worker 登録 -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
-          .then(reg => console.log('Service Worker registered:', reg))
-          .catch(err => console.log('Service Worker registration failed:', err));
-      });
-    }
   </script>
 </body>
 </html>
