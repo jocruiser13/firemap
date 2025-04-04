@@ -198,34 +198,34 @@
   const markers = [];
 
   form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const data = {
-      area: document.getElementById("input-area").value,
-      name: document.getElementById("input-name").value,
-      type: document.getElementById("input-type").value,
-      usable: document.getElementById("input-usable").value,
-      pressure: parseFloat(document.getElementById("input-pressure").value),
-      capacity: parseFloat(document.getElementById("input-capacity").value),
-      note: document.getElementById("input-note").value,
-      lat: parseFloat(document.getElementById("input-lat").value),
-      lng: parseFloat(document.getElementById("input-lng").value),
-      date: document.getElementById("input-date").value
-    };
+  e.preventDefault();
+  const data = {
+    area: document.getElementById("input-area").value,
+    name: document.getElementById("input-name").value,
+    type: document.getElementById("input-type").value,
+    usable: document.getElementById("input-usable").value,
+    pressure: parseFloat(document.getElementById("input-pressure").value),
+    capacity: parseFloat(document.getElementById("input-capacity").value),
+    note: document.getElementById("input-note").value,
+    lat: parseFloat(document.getElementById("input-lat").value),
+    lng: parseFloat(document.getElementById("input-lng").value),
+    date: document.getElementById("input-date").value
+  };
 
-    const idVal = document.getElementById("input-id").value;
-    const result = idVal
-      ? await supabase.from("water_data").update(data).eq("id", idVal)
-      : await supabase.from("water_data").insert([data]);
+  const idVal = document.getElementById("input-id").value;
+  const result = idVal
+    ? await supabase.from("water_data").update(data).eq("id", parseInt(idVal))
+    : await supabase.from("water_data").insert([data]);
 
-    if (result.error) return alert("保存エラー: " + result.error.message);
-    alert(idVal ? "更新しました！" : "保存しました（クラウド保存）");
+  if (result.error) return alert("保存エラー: " + result.error.message);
+  alert(idVal ? "更新しました！" : "保存しました（クラウド保存）");
 
-    form.reset();
-    document.getElementById("input-date").value = today;
-    document.getElementById("input-id").value = "";
-    renderAll();
-    switchTab("map-tab");
-  });
+  form.reset();
+  document.getElementById("input-date").value = today;
+  document.getElementById("input-id").value = "";
+  renderAll();
+  switchTab("map-tab");
+});
 
   async function renderAll() {
     const { data, error } = await supabase.from("water_data").select("*").order("id");
