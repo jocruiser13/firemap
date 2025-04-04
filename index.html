@@ -378,8 +378,7 @@
   document.getElementById("input-id").value = "";
   renderAll();
   switchTab("map-tab");
-});
-});   async function renderAll() {
+});    async function renderAll() {
   alert("renderAll が呼び出されました");
 
   const { data, error } = await supabase.from("water_data").select("*").order("id");
