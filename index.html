@@ -90,7 +90,9 @@
 
     <div id="search-area">
       <label>名称検索：
-        <input type="text" id="searchName" placeholder="例：◯◯水槽や◯◯消火栓" />
+        <select id="searchSelect">
+          <option value="">選択してください</option>
+        </select>
       </label>
       <button onclick="searchMarker()">ジャンプ</button>
     </div>
@@ -171,6 +173,7 @@
     function renderAll() {
       renderMarkers();
       displayData();
+      populateSearchSelect();
     }
 
     function renderMarkers() {
@@ -238,16 +241,25 @@
       document.getElementById("index").value = index;
     }
 
-    function searchMarker() {
-      const name = document.getElementById("searchName").value.trim();
-      if (!name) return;
+    function populateSearchSelect() {
+      const select = document.getElementById("searchSelect");
+      select.innerHTML = '<option value="">選択してください</option>';
+      const data = JSON.parse(localStorage.getItem("waterData") || "[]");
+      data.forEach((d, i) => {
+        const option = document.createElement("option");
+        option.value = d.name;
+        option.textContent = d.name;
+        select.appendChild(option);
+      });
+    }
 
+    function searchMarker() {
+      const name = document.getElementById("searchSelect").value;
+      if (!name) return;
       const marker = markers.find(m => m._customId === name);
       if (marker) {
         map.setView(marker.getLatLng(), 18);
         marker.openPopup();
-      } else {
-        alert("該当する名称が見つかりませんでした。");
       }
     }
 
