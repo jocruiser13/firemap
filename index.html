@@ -178,19 +178,28 @@
           shadowSize: [41, 41]
         });
 
+        const popupContent = (() => {
+          const base = `<strong>${d.name}</strong><br>種類: ${d.type}<br>`;
+          const updated = `更新日: ${d.date}<br>`;
+          const note = `備考: ${d.note || 'なし'}<br>`;
+          if (d.type === "消火栓") {
+            return base +
+              `利用可否: ${d.usable}<br>` +
+              `静水圧: ${d.pressure ?? '未入力'} MPa<br>` +
+              note + updated;
+          } else if (d.type === "水槽") {
+            return base +
+              `利用可否: ${d.usable}<br>` +
+              `容量: ${d.capacity ?? '未入力'} t<br>` +
+              note + updated;
+          } else {
+            return base + note + updated;
+          }
+        })();
+
         const marker = L.marker([d.lat, d.lng], { icon })
           .addTo(map)
-          .bindPopup(`
-            <strong>${d.name}</strong><br>
-            種類: ${d.type}<br>
-            利用可否: ${d.usable}<br>
-            静水圧: ${d.pressure ?? '未入力'} MPa<br>
-            容量: ${d.capacity ?? '未入力'} t<br>
-            備考: ${d.note || 'なし'}<br>
-            緯度: ${d.lat}<br>
-            経度: ${d.lng}<br>
-            更新日: ${d.date}
-          `);
+          .bindPopup(popupContent);
         marker._customId = d.name;
         markers.push(marker);
 
@@ -213,7 +222,6 @@
     window.editData = async function(id) {
       const { data, error } = await supabase.from("water_data").select("*").eq("id", id).single();
       if (error) return alert("取得エラー");
-
       for (const key in data) {
         const input = document.getElementById("input-" + key);
         if (input) input.value = data[key];
