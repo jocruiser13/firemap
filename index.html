@@ -9,89 +9,98 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"></script>
   <style>
-    html, body {
-      margin: 0; padding: 0; height: 100%; font-family: sans-serif;
-    }
-    #map {
-      height: 100vh;
-      width: 100%;
-    }
+    html, body { margin: 0; padding: 0; height: 100%; font-family: sans-serif; }
+    #map { height: 100vh; width: 100%; }
     #menuToggle {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-      background: #2196f3;
-      color: white;
-      border: none;
-      font-size: 1.5em;
-      padding: 10px;
-      border-radius: 4px;
+      position: fixed; top: 10px; left: 10px; z-index: 1000;
+      background: #2196f3; color: white; border: none;
+      font-size: 1.5em; padding: 10px; border-radius: 4px;
     }
     #menuContent {
-      position: fixed;
-      top: 60px;
-      left: 10px;
-      z-index: 1000;
-      background: white;
-      border: 1px solid #ccc;
-      padding: 10px;
-      display: none;
-      max-height: 80vh;
-      overflow-y: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      position: fixed; top: 60px; left: 10px; z-index: 1000;
+      background: white; border: 1px solid #ccc; padding: 10px;
+      display: none; max-height: 80vh; overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2); width: 280px;
+    }
+    #menuContent button {
+      display: block; width: 100%; padding: 8px;
+      margin: 5px 0; font-size: 1em;
     }
     #searchBar {
-      position: fixed;
-      top: 10px;
-      left: 60px;
-      right: 10px;
-      z-index: 1000;
+      position: fixed; top: 10px; left: 60px; right: 10px; z-index: 1000;
     }
     #searchBar input {
-      width: 100%;
-      padding: 10px;
-      font-size: 1em;
-      box-sizing: border-box;
+      width: 100%; padding: 10px; font-size: 1em; box-sizing: border-box;
     }
     table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.9em;
+      width: 100%; border-collapse: collapse; font-size: 0.9em;
     }
     th, td {
-      border: 1px solid #ccc;
-      padding: 6px;
-      vertical-align: top;
+      border: 1px solid #ccc; padding: 6px; vertical-align: top;
     }
-    th {
-      background: #eee;
-    }
-    .folder-section {
-      margin-top: 10px;
-    }
+    th { background: #eee; }
+    .folder-section { margin-top: 10px; }
     .folder-header {
-      font-weight: bold;
-      cursor: pointer;
-      background: #ddd;
-      padding: 5px;
-      margin-top: 10px;
+      font-weight: bold; cursor: pointer;
+      background: #ddd; padding: 5px; margin-top: 10px;
     }
-    .folder-body {
-      display: none;
+    .folder-body { display: none; }
+    #modalOverlay {
+      display: none; position: fixed; z-index: 2000; top: 0; left: 0;
+      width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+    }
+    #modalForm {
+      background: white; margin: 10% auto; padding: 20px;
+      width: 90%; max-width: 400px; border-radius: 8px;
+    }
+    #modalForm input, #modalForm select, #modalForm textarea, #modalForm button {
+      width: 100%; margin-top: 8px; padding: 8px; box-sizing: border-box;
     }
   </style>
 </head>
-<body>  <button id="menuToggle"><i class="fas fa-bars"></i></button>
+<body>
+  <button id="menuToggle"><i class="fas fa-bars"></i></button>
   <div id="searchBar">
     <input type="text" id="searchInput" placeholder="名称で検索" />
   </div>
   <div id="menuContent">
+    <button onclick="openForm()">＋ 水利を追加</button>
     <div id="folderContainer"></div>
   </div>
-  <div id="map"></div>
 
-  <script type="module">
+  <div id="modalOverlay">
+    <form id="waterForm">
+      <div id="modalForm">
+        <h3 id="formTitle">水利情報の入力</h3>
+        <input type="hidden" id="input-id" />
+        <label>名称：<input type="text" id="input-name" required /></label>
+        <label>種類：
+          <select id="input-type">
+            <option value="消火栓">消火栓</option>
+            <option value="水槽">水槽</option>
+            <option value="その他">その他</option>
+          </select>
+        </label>
+        <label>利用可否：
+          <select id="input-usable">
+            <option value="○">○</option>
+            <option value="×">×</option>
+            <option value="要確認">要確認</option>
+          </select>
+        </label>
+        <label>静水圧（MPa）：<input type="number" id="input-pressure" step="0.01" /></label>
+        <label>容量（t）：<input type="number" id="input-capacity" /></label>
+        <label>備考：<textarea id="input-note" rows="3"></textarea></label>
+        <label>緯度：<input type="text" id="input-lat" required /></label>
+        <label>経度：<input type="text" id="input-lng" required /></label>
+        <label>最終更新日：<input type="text" id="input-date" readonly /></label>
+        <button type="submit">送信（クラウド保存）</button>
+        <button type="button" onclick="closeForm()">閉じる</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="map"></div>  <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
     const supabase = createClient(
       "https://lqyqeyxujdmvcromkkbg.supabase.co",
@@ -105,6 +114,8 @@
     }).addTo(map);
 
     const markers = [];
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("input-date").value = today;
 
     document.getElementById("menuToggle").addEventListener("click", () => {
       const menu = document.getElementById("menuContent");
@@ -120,7 +131,42 @@
       }
     });
 
-    function renderMarkers(data) {
+    function openForm() {
+      document.getElementById("modalOverlay").style.display = "block";
+      document.getElementById("formTitle").textContent = "水利情報の入力";
+      document.getElementById("waterForm").reset();
+      document.getElementById("input-date").value = today;
+      document.getElementById("input-id").value = "";
+    }
+
+    function closeForm() {
+      document.getElementById("modalOverlay").style.display = "none";
+    }
+
+    document.getElementById("waterForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = {
+        name: document.getElementById("input-name").value,
+        type: document.getElementById("input-type").value,
+        usable: document.getElementById("input-usable").value,
+        pressure: parseFloat(document.getElementById("input-pressure").value),
+        capacity: parseFloat(document.getElementById("input-capacity").value),
+        note: document.getElementById("input-note").value,
+        lat: parseFloat(document.getElementById("input-lat").value),
+        lng: parseFloat(document.getElementById("input-lng").value),
+        date: document.getElementById("input-date").value
+      };
+
+      const id = document.getElementById("input-id").value;
+      const result = id
+        ? await supabase.from("water_data").update(data).eq("id", id)
+        : await supabase.from("water_data").insert([data]);
+
+      if (result.error) return alert("保存エラー：" + result.error.message);
+      alert(id ? "更新しました！" : "保存しました（クラウド保存）");
+      closeForm();
+      loadData();
+    });    function renderMarkers(data) {
       markers.forEach(m => map.removeLayer(m));
       markers.length = 0;
 
@@ -167,7 +213,7 @@
         items.forEach(d => {
           const item = document.createElement("div");
           item.textContent = d.name;
-          item.style.padding = "3px";
+          item.style.padding = "4px";
           item.style.cursor = "pointer";
           item.addEventListener("click", () => {
             const marker = markers.find(m => m._customId === d.name);
@@ -176,17 +222,50 @@
               marker.openPopup();
             }
           });
-          body.appendChild(item);
+
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "編集";
+          editBtn.style.margin = "2px";
+          editBtn.onclick = () => loadEditForm(d.id);
+
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "削除";
+          delBtn.style.margin = "2px";
+          delBtn.onclick = async () => {
+            if (confirm("削除しますか？")) {
+              await supabase.from("water_data").delete().eq("id", d.id);
+              loadData();
+            }
+          };
+
+          const row = document.createElement("div");
+          row.style.display = "flex";
+          row.style.justifyContent = "space-between";
+          row.appendChild(item);
+          row.appendChild(editBtn);
+          row.appendChild(delBtn);
+          body.appendChild(row);
         });
 
         header.addEventListener("click", () => {
-          body.style.display = (body.style.display === "block") ? "none" : "block";
+          body.style.display = body.style.display === "block" ? "none" : "block";
         });
 
         section.appendChild(header);
         section.appendChild(body);
         container.appendChild(section);
       });
+    }
+
+    async function loadEditForm(id) {
+      const { data, error } = await supabase.from("water_data").select("*").eq("id", id).single();
+      if (error) return alert("取得エラー");
+      for (const key in data) {
+        const el = document.getElementById("input-" + key);
+        if (el) el.value = data[key];
+      }
+      document.getElementById("formTitle").textContent = "水利情報の編集";
+      document.getElementById("modalOverlay").style.display = "block";
     }
 
     async function loadData() {
