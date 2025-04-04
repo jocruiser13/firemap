@@ -94,7 +94,6 @@
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // 長押しピン対応
     let holdTimer;
     function setCoordsAndSwitchTab(latlng) {
       document.getElementById("input-lat").value = latlng.lat.toFixed(6);
@@ -111,7 +110,6 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-
       const nameVal = document.getElementById("input-name").value.trim();
       const latVal = document.getElementById("input-lat").value;
       const lngVal = document.getElementById("input-lng").value;
@@ -159,7 +157,13 @@
       dataList.innerHTML = "";
 
       const table = document.createElement("table");
-      table.innerHTML = `<tr><th>名称</th><th>種類</th><th>利用可否</th><th>操作</th></tr>`;
+      table.innerHTML = `
+        <tr>
+          <th>名称</th><th>種類</th><th>利用可否</th>
+          <th>静水圧（MPa）</th><th>容量（t）</th>
+          <th>緯度</th><th>経度</th><th>更新日</th><th>操作</th>
+        </tr>
+      `;
 
       data.forEach(d => {
         const iconColor = d.type === "消火栓" ? "red" : d.type === "水槽" ? "blue" : "green";
@@ -181,6 +185,8 @@
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${d.name}</td><td>${d.type}</td><td>${d.usable}</td>
+          <td>${d.pressure ?? ''}</td><td>${d.capacity ?? ''}</td>
+          <td>${d.lat}</td><td>${d.lng}</td><td>${d.date}</td>
           <td>
             <button onclick="window.editData(${d.id})">編集</button>
             <button onclick="window.deleteData(${d.id})">削除</button>
@@ -211,8 +217,8 @@
     };
 
     window.searchMarker = function () {
-      const keyword = document.getElementById("searchInput").value.trim();
-      const marker = markers.find(m => m._customId.includes(keyword));
+      const name = document.getElementById("searchInput").value.trim();
+      const marker = markers.find(m => m._customId.includes(name));
       if (marker) {
         map.setView(marker.getLatLng(), 18);
         marker.openPopup();
