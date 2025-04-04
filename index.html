@@ -293,7 +293,34 @@
   }
 
   window.editData = async function(id) {
-    const { data, error } = await supabase.from("water_data").select("*").eq("id", id).single();
+  const { data, error } = await supabase
+    .from("water_data")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();  // ← 複数件でも落ちないように安全に取得
+
+  if (error || !data) {
+    console.error("取得エラー:", error);
+    return alert("取得エラー：データが見つかりません");
+  }
+
+  // 各入力欄にデータをセット
+  document.getElementById("input-id").value = data.id;
+  document.getElementById("input-area").value = data.area || "";
+  document.getElementById("input-name").value = data.name || "";
+  document.getElementById("input-type").value = data.type || "";
+  document.getElementById("input-usable").value = data.usable || "";
+  document.getElementById("input-pressure").value = data.pressure ?? "";
+  document.getElementById("input-capacity").value = data.capacity ?? "";
+  document.getElementById("input-note").value = data.note || "";
+  document.getElementById("input-lat").value = data.lat ?? "";
+  document.getElementById("input-lng").value = data.lng ?? "";
+  document.getElementById("input-date").value = data.date || "";
+
+  console.log("編集データをフォームに反映:", data);
+
+  switchTab("form-tab");
+};
     if (error) return alert("取得エラー");
     for (const key in data) {
       const input = document.getElementById("input-" + key);
