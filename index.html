@@ -101,16 +101,16 @@
   e.preventDefault();
 
   const data = {
-    name: name.value,
-    type: type.value,
-    usable: usable.value,
-    pressure: parseFloat(pressure.value),
-    capacity: parseFloat(capacity.value),
-    note: note.value,
-    lat: parseFloat(lat.value),
-    lng: parseFloat(lng.value),
-    date: date.value
-  };
+  name: document.getElementById("name").value,
+  type: document.getElementById("type").value,
+  usable: document.getElementById("usable").value,
+  pressure: parseFloat(document.getElementById("pressure").value),
+  capacity: parseFloat(document.getElementById("capacity").value),
+  note: document.getElementById("note").value,
+  lat: parseFloat(document.getElementById("lat").value),
+  lng: parseFloat(document.getElementById("lng").value),
+  date: document.getElementById("date").value
+};
 
   const idVal = document.getElementById("id").value;
   let result;
