@@ -9,14 +9,13 @@
     html, body {
       margin: 0;
       padding: 0;
-      height: 100%;
       font-family: sans-serif;
     }
     #map {
       width: 100%;
-      height: 60vh;
+      height: 50vh;
     }
-    #form-area {
+    #form-area, #list-area {
       padding: 10px;
       background: #f2f2f2;
     }
@@ -28,6 +27,19 @@
     }
     label {
       font-weight: bold;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 5px;
+      font-size: 0.9em;
+    }
+    th {
+      background: #eee;
     }
   </style>
 </head>
@@ -73,28 +85,33 @@
     </form>
   </div>
 
+  <div id="list-area">
+    <h2>保存済み水利一覧</h2>
+    <div id="dataList"></div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // 地図の初期化（深山公園）
+    // 地図の初期化
     const map = L.map('map').setView([34.483955, 133.931957], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-
     L.marker([34.483955, 133.931957])
       .addTo(map)
       .bindPopup("深山公園中心")
       .openPopup();
 
-    // 最終更新日 自動入力
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("date").value = today;
 
-    // フォーム送信時：ローカル保存
-    document.getElementById("waterForm").addEventListener("submit", function (e) {
+    const form = document.getElementById("waterForm");
+    const dataList = document.getElementById("dataList");
+
+    form.addEventListener("submit", function (e) {
       e.preventDefault();
 
-      const formData = new FormData(e.target);
+      const formData = new FormData(form);
       const data = {};
       formData.forEach((value, key) => {
         data[key] = value;
@@ -105,10 +122,38 @@
       localStorage.setItem("waterData", JSON.stringify(existing));
 
       alert("保存しました！（ローカル保存）");
-
-      e.target.reset();
+      form.reset();
       document.getElementById("date").value = today;
+
+      displayData();
     });
+
+    function displayData() {
+      const data = JSON.parse(localStorage.getItem("waterData") || "[]");
+      if (data.length === 0) {
+        dataList.innerHTML = "<p>保存されたデータはありません。</p>";
+        return;
+      }
+
+      let html = "<table><tr><th>名称</th><th>種類</th><th>利用可否</th><th>静水圧</th><th>容量</th><th>緯度</th><th>経度</th><th>更新日</th></tr>";
+      data.forEach(d => {
+        html += `<tr>
+          <td>${d.name}</td>
+          <td>${d.type}</td>
+          <td>${d.usable}</td>
+          <td>${d.pressure}</td>
+          <td>${d.capacity}</td>
+          <td>${d.lat}</td>
+          <td>${d.lng}</td>
+          <td>${d.date}</td>
+        </tr>`;
+      });
+      html += "</table>";
+
+      dataList.innerHTML = html;
+    }
+
+    displayData(); // 初回読み込み時に表示
   </script>
 </body>
 </html>
