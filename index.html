@@ -11,10 +11,12 @@
       margin: 0;
       padding: 0;
       font-family: sans-serif;
+      height: 100%;
     }
     #map {
       width: 100%;
-      height: 50vh;
+      height: 100vh;
+      transition: height 0.3s;
     }
     #form-area, #list-area {
       padding: 10px;
@@ -51,10 +53,7 @@
     #search-area {
       margin-bottom: 10px;
     }
-    #form-area {
-      display: none;
-    }
-    #toggle-form-btn {
+    #toggle-all-btn {
       margin: 10px;
       padding: 10px;
       background: #ff7043;
@@ -71,9 +70,9 @@
 <body>
   <div id="map"></div>
 
-  <button id="toggle-form-btn">＋ 水利を追加</button>
+  <button id="toggle-all-btn">＋ 水利情報を表示</button>
 
-  <div id="form-area">
+  <div id="form-area" style="display: none;">
     <h2>水利情報の入力</h2>
     <form id="waterForm">
       <input type="hidden" name="index" id="index" />
@@ -103,7 +102,7 @@
     </form>
   </div>
 
-  <div id="list-area">
+  <div id="list-area" style="display: none;">
     <h2>保存済み水利一覧</h2>
     <div id="search-area">
       <label>名称検索：
@@ -123,30 +122,18 @@
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // 現在地ボタン
-    const locateBtn = L.control({ position: 'topright' });
-    locateBtn.onAdd = function () {
-      const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-      div.innerHTML = '<button title="現在地" style="background:white;border:none;padding:6px;">📍</button>';
-      div.onclick = function () {
-        map.locate({ setView: true, maxZoom: 18 });
-      };
-      return div;
-    };
-    locateBtn.addTo(map);
+    // トグルボタンでフォーム＋一覧切り替え
+    const toggleBtn = document.getElementById("toggle-all-btn");
+    const formArea = document.getElementById("form-area");
+    const listArea = document.getElementById("list-area");
 
-    map.on('locationfound', function (e) {
-      L.circleMarker(e.latlng, {
-        radius: 8,
-        color: '#3388ff',
-        fillColor: '#3388ff',
-        fillOpacity: 0.8
-      }).addTo(map).bindPopup("現在地").openPopup();
-    });
-
-    document.getElementById("toggle-form-btn").addEventListener("click", () => {
-      const formArea = document.getElementById("form-area");
-      formArea.style.display = (formArea.style.display === "none") ? "block" : "none";
+    toggleBtn.addEventListener("click", () => {
+      const isHidden = formArea.style.display === "none";
+      formArea.style.display = isHidden ? "block" : "none";
+      listArea.style.display = isHidden ? "block" : "none";
+      document.getElementById("map").style.height = isHidden ? "50vh" : "100vh";
+      toggleBtn.textContent = isHidden ? "− 水利情報を隠す" : "＋ 水利情報を表示";
+      map.invalidateSize();
     });
 
     const today = new Date().toISOString().split("T")[0];
