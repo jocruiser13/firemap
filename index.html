@@ -374,8 +374,9 @@
   renderAll();
   switchTab('map-tab');
 });   async function renderAll() {
-      const { data, error } = await supabase.from("water_data").select("*").order("id");
-      if (error) return console.error("取得エラー:", error);
+  alert("renderAll が呼び出されました");
+  const { data, error } = await supabase.from("water_data").select("*").order("id");
+  if (error) return console.error("取得エラー:", error);
 
       markers.forEach(m => map.removeLayer(m));
       markers.length = 0;
