@@ -198,7 +198,7 @@
   const markers = [];
 
   form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+  e.preventDefault();alert("送信前のID: " + document.getElementById("input-id").value);
 
   const idValRaw = document.getElementById("input-id").value;
   const idVal = idValRaw ? parseInt(idValRaw) : null;
