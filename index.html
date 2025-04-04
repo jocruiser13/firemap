@@ -11,12 +11,10 @@
       margin: 0;
       padding: 0;
       font-family: sans-serif;
-      height: 100%;
     }
     #map {
       width: 100%;
-      height: 100vh;
-      transition: height 0.3s;
+      height: 50vh;
     }
     #form-area, #list-area {
       padding: 10px;
@@ -53,30 +51,29 @@
     #search-area {
       margin-bottom: 10px;
     }
-
-    /* 地図上にボタンを固定 */
-    #toggle-map-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 1000;
-      padding: 10px 15px;
+    #form-area {
+      display: none;
+    }
+    #toggle-form-btn {
+      margin: 10px;
+      padding: 10px;
       background: #ff7043;
       color: white;
       border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      font-size: 1em;
+    }
+    .leaflet-top.leaflet-right {
+      top: 10px;
+      right: 10px;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
-  <!-- 地図上に常に表示されるボタン -->
-  <button id="toggle-map-btn">＋ 水利情報を表示</button>
+  <button id="toggle-form-btn">＋ 水利を追加</button>
 
-  <div id="form-area" style="display: none;">
+  <div id="form-area">
     <h2>水利情報の入力</h2>
     <form id="waterForm">
       <input type="hidden" name="index" id="index" />
@@ -106,7 +103,7 @@
     </form>
   </div>
 
-  <div id="list-area" style="display: none;">
+  <div id="list-area">
     <h2>保存済み水利一覧</h2>
     <div id="search-area">
       <label>名称検索：
@@ -126,18 +123,30 @@
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // 地図右下にある固定ボタンの処理
-    const toggleBtn = document.getElementById("toggle-map-btn");
-    const formArea = document.getElementById("form-area");
-    const listArea = document.getElementById("list-area");
+    // 現在地ボタン
+    const locateBtn = L.control({ position: 'topright' });
+    locateBtn.onAdd = function () {
+      const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+      div.innerHTML = '<button title="現在地" style="background:white;border:none;padding:6px;">📍</button>';
+      div.onclick = function () {
+        map.locate({ setView: true, maxZoom: 18 });
+      };
+      return div;
+    };
+    locateBtn.addTo(map);
 
-    toggleBtn.addEventListener("click", () => {
-      const isHidden = formArea.style.display === "none";
-      formArea.style.display = isHidden ? "block" : "none";
-      listArea.style.display = isHidden ? "block" : "none";
-      document.getElementById("map").style.height = isHidden ? "50vh" : "100vh";
-      toggleBtn.textContent = isHidden ? "− 水利情報を隠す" : "＋ 水利情報を表示";
-      map.invalidateSize();
+    map.on('locationfound', function (e) {
+      L.circleMarker(e.latlng, {
+        radius: 8,
+        color: '#3388ff',
+        fillColor: '#3388ff',
+        fillOpacity: 0.8
+      }).addTo(map).bindPopup("現在地").openPopup();
+    });
+
+    document.getElementById("toggle-form-btn").addEventListener("click", () => {
+      const formArea = document.getElementById("form-area");
+      formArea.style.display = (formArea.style.display === "none") ? "block" : "none";
     });
 
     const today = new Date().toISOString().split("T")[0];
@@ -219,4 +228,73 @@
         return;
       }
 
-      let html = "<table><tr><th>
+      let html = "<table><tr><th>名称</th><th>種類</th><th>利用可否</th><th>静水圧（MPa）</th><th>容量（t）</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th></tr>";
+      data.forEach((d, i) => {
+        html += `<tr>
+          <td>${d.name}</td>
+          <td>${d.type}</td>
+          <td>${d.usable}</td>
+          <td>${d.pressure}</td>
+          <td>${d.capacity}</td>
+          <td>${d.lat}</td>
+          <td>${d.lng}</td>
+          <td>${d.date}</td>
+          <td>
+            <button class="btn-small" onclick="editData(${i})">編集</button>
+            <button class="btn-small" onclick="deleteData(${i})">削除</button>
+          </td>
+        </tr>`;
+      });
+      html += "</table>";
+      dataList.innerHTML = html;
+    }
+
+    function deleteData(index) {
+      if (!confirm("この水利情報を削除しますか？")) return;
+      let data = JSON.parse(localStorage.getItem("waterData") || "[]");
+      data.splice(index, 1);
+      localStorage.setItem("waterData", JSON.stringify(data));
+      renderAll();
+    }
+
+    function editData(index) {
+      const data = JSON.parse(localStorage.getItem("waterData") || "[]")[index];
+      if (!data) return;
+
+      document.getElementById("name").value = data.name || "";
+      document.getElementById("type").value = data.type || "";
+      document.getElementById("usable").value = data.usable || "";
+      document.getElementById("pressure").value = data.pressure || "";
+      document.getElementById("capacity").value = data.capacity || "";
+      document.getElementById("note").value = data.note || "";
+      document.getElementById("lat").value = data.lat || "";
+      document.getElementById("lng").value = data.lng || "";
+      document.getElementById("date").value = data.date || "";
+      document.getElementById("index").value = index;
+    }
+
+    function populateSearchSelect() {
+      const select = document.getElementById("searchSelect");
+      select.innerHTML = '<option value="">選択してください</option>';
+      const data = JSON.parse(localStorage.getItem("waterData") || "[]");
+      data.forEach((d) => {
+        const option = document.createElement("option");
+        option.value = d.name;
+        option.textContent = d.name;
+        select.appendChild(option);
+      });
+    }
+
+    function searchMarker() {
+      const name = document.getElementById("searchSelect").value;
+      const marker = markers.find(m => m._customId === name);
+      if (marker) {
+        map.setView(marker.getLatLng(), 18);
+        marker.openPopup();
+      }
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
