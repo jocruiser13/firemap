@@ -306,6 +306,13 @@ document.getElementById("input-date").value = today;
 window.switchTab = function(id) {
   document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
   document.getElementById(id).style.display = 'block';
+
+  // 地図タブが表示された直後に地図サイズをリセット
+  if (id === 'map-tab') {
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+  }
 };
 switchTab('map-tab');
 
