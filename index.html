@@ -335,9 +335,11 @@ async function renderAll() {
   markers.length = 0;
 
   const selectedArea = document.getElementById("filter-area").value;
-const filtered = selectedArea && selectedArea !== "行政区分を選ぶ" && selectedArea !== "すべてを表示"
-  ? data.filter(d => d.area === selectedArea)
-  : data;
+const filtered = selectedArea === "すべてを表示"
+  ? data
+  : selectedArea && selectedArea !== "行政区分を選ぶ"
+    ? data.filter(d => d.area === selectedArea)
+    : []; // 表示しない
 
   const dataList = document.getElementById("dataList");
   dataList.innerHTML = "";
