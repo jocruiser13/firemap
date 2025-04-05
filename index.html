@@ -360,38 +360,39 @@ const filtered = selectedArea && selectedArea !== "行政区分を選ぶ" && sel
     shadowSize: [41, 41]
   });
 
-  const popupContent = (() => {
-    if (d.type === "その他") {
-      return `
-        <strong>${d.name}</strong><br>
-        行政区分: ${d.area}<br>
-        備考: ${d.note || 'なし'}<br>
-        更新日: ${d.date}
-      `;
-    }
-    if (d.type === "消火栓") {
-      return `
-        <strong>${d.name}</strong><br>
-        行政区分: ${d.area}<br>
-        種類: ${d.type}<br>
-        可否: ${d.usable}<br>
-        静水圧: ${d.pressure ?? ''} MPa<br>
-        備考: ${d.note || 'なし'}<br>
-        更新日: ${d.date}
-      `;
-    }
-    if (d.type === "水槽") {
-      return `
-        <strong>${d.name}</strong><br>
-        行政区分: ${d.area}<br>
-        種類: ${d.type}<br>
-        可否: ${d.usable}<br>
-        容量: ${d.capacity ?? ''} t<br>
-        備考: ${d.note || 'なし'}<br>
-        更新日: ${d.date}
-      `;
-    }
-  })();
+  // ポップアップ内容を種類ごとに分岐
+  let popupContent = "";
+  if (d.type === "その他") {
+    popupContent = `
+      <strong>${d.name}</strong><br>
+      行政区分: ${d.area}<br>
+      備考: ${d.note || 'なし'}<br>
+      更新日: ${d.date}<br>
+      <button onclick="window.editData(${d.id})">編集</button>
+    `;
+  } else if (d.type === "消火栓") {
+    popupContent = `
+      <strong>${d.name}</strong><br>
+      行政区分: ${d.area}<br>
+      種類: ${d.type}<br>
+      可否: ${d.usable}<br>
+      静水圧: ${d.pressure ?? ''} MPa<br>
+      備考: ${d.note || 'なし'}<br>
+      更新日: ${d.date}<br>
+      <button onclick="window.editData(${d.id})">編集</button>
+    `;
+  } else if (d.type === "水槽") {
+    popupContent = `
+      <strong>${d.name}</strong><br>
+      行政区分: ${d.area}<br>
+      種類: ${d.type}<br>
+      可否: ${d.usable}<br>
+      容量: ${d.capacity ?? ''} t<br>
+      備考: ${d.note || 'なし'}<br>
+      更新日: ${d.date}<br>
+      <button onclick="window.editData(${d.id})">編集</button>
+    `;
+  }
 
   const marker = L.marker([d.lat, d.lng], { icon }).addTo(map).bindPopup(popupContent);
   marker._customId = d.name;
