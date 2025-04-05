@@ -402,7 +402,7 @@ map.on("click", e => {
   document.getElementById("input-lng").value = e.latlng.lng.toFixed(6);
   switchTab("form-tab");
 });
-
+document.getElementById("filter-area").addEventListener("change", renderAll);
 renderAll();
 </script>
 </body>
