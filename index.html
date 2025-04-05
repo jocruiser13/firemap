@@ -471,12 +471,15 @@
     if (input) input.value = data[key];
   }
 
+  // ←ここが超重要！id を明示的に入れる！
+  document.getElementById("input-id").value = data.id;
+
   alert("フォームに値がセットされました: " +
+    "\nID: " + document.getElementById("input-id").value +
     "\n名称: " + document.getElementById("input-name").value +
     "\n緯度: " + document.getElementById("input-lat").value +
     "\n経度: " + document.getElementById("input-lng").value);
 
-  document.getElementById("input-id").value = id;
   switchTab("form-tab");
 };
 
