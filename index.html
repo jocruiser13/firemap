@@ -398,10 +398,7 @@ const filtered = selectedArea && selectedArea !== "行政区分を選ぶ" && sel
   markers.push(marker);
 });
 
-    const marker = L.marker([d.lat, d.lng], { icon }).addTo(map)
-      .bindPopup(`<strong>${d.name}</strong><br>行政区分: ${d.area}<br>種類: ${d.type}<br>可否: ${d.usable}<br>静水圧: ${d.pressure ?? ''} MPa<br>容量: ${d.capacity ?? ''} t<br>備考: ${d.note || 'なし'}<br>更新日: ${d.date}`);
-    marker._customId = d.name;
-    markers.push(marker);
+    
 
     const row = document.createElement("tr");
     row.innerHTML = `
