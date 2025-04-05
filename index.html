@@ -324,7 +324,7 @@ async function renderAll() {
   markers.length = 0;
 
   const selectedArea = document.getElementById("filter-area").value;
-  const filtered = selectedArea ? data.filter(d => d.area === selectedArea) : data;
+const filtered = selectedArea ? data.filter(d => d.area === selectedArea) : [];
 
   const dataList = document.getElementById("dataList");
   dataList.innerHTML = "";
