@@ -324,6 +324,27 @@ L.control.zoom({ position: 'bottomright' }).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap contributors'
 }).addTo(map);
+  let currentLocationMarker;
+
+map.locate({
+  watch: true,
+  setView: true,
+  maxZoom: 18,
+  enableHighAccuracy: true
+});
+
+map.on('locationfound', function (e) {
+  if (currentLocationMarker) {
+    currentLocationMarker.setLatLng(e.latlng);
+  } else {
+    currentLocationMarker = L.circleMarker(e.latlng, {
+      radius: 8,
+      color: '#136AEC',
+      fillColor: '#2A93EE',
+      fillOpacity: 0.9
+    }).addTo(map).bindPopup("現在地");
+  }
+});
 
 const markers = [];
 
