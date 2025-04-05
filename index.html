@@ -327,8 +327,8 @@ const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
   attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// 国土地理院 航空写真レイヤー
-const gsiPhotoLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/orthophoto/{z}/{x}/{y}.jpg', {
+// GSI航空写真（正しいURL）
+const gsiPhotoLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.png', {
   attribution: '地図：国土地理院（GSI）'
 });
 
