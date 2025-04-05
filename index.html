@@ -8,24 +8,65 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"></script>
   <style>
-    body { margin: 0; font-family: sans-serif; }
+    body {
+      margin: 0;
+      font-family: sans-serif;
+    }
+
     header {
-      display: flex; background: #2196f3; color: white; font-weight: bold;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      background: #2196f3;
+      color: white;
+      font-weight: bold;
+      z-index: 1000;
     }
+
     header div {
-      flex: 1; text-align: center; padding: 10px; cursor: pointer;
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
     }
-    .tab-content { display: none; padding: 10px; }
-    #map { height: 100vh; }
+
+    .tab-content {
+      display: none;
+      padding: 10px;
+      margin-top: 50px;
+    }
+
+    #map {
+      height: calc(100vh - 50px);
+    }
+
     input, select, textarea, button {
-      width: 100%; margin: 6px 0; padding: 6px;
+      width: 100%;
+      margin: 6px 0;
+      padding: 6px;
+      font-size: 1em;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
-    th, td { border: 1px solid #ccc; padding: 6px; }
-    th { background: #eee; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9em;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+    }
+
+    th {
+      background: #eee;
+    }
   </style>
 </head>
-<body>  <header>
+<body>
+  <header>
     <div onclick="switchTab('map-tab')">地図</div>
     <div onclick="switchTab('form-tab')">追加</div>
     <div onclick="switchTab('list-tab')">一覧・検索</div>
@@ -40,28 +81,12 @@
     <form id="waterForm">
       <input type="hidden" id="input-id" />
       <label>行政区分：
-        <select id="input-area">
+        <select id="input-area" required>
           <option value="">選択してください</option>
-          <option value="田井1丁目">田井1丁目</option>
-          <option value="田井2丁目">田井2丁目</option>
-          <option value="田井3丁目">田井3丁目</option>
-          <option value="田井4丁目">田井4丁目</option>
-          <option value="田井5丁目">田井5丁目</option>
-          <option value="田井6丁目">田井6丁目</option>
-          <option value="築港1丁目">築港1丁目</option>
-          <option value="築港2丁目">築港2丁目</option>
-          <option value="築港3丁目">築港3丁目</option>
-          <option value="築港4丁目">築港4丁目</option>
-          <option value="築港5丁目">築港5丁目</option>
           <option value="宇野1丁目">宇野1丁目</option>
           <option value="宇野2丁目">宇野2丁目</option>
-          <option value="宇野3丁目">宇野3丁目</option>
-          <option value="宇野4丁目">宇野4丁目</option>
-          <option value="宇野5丁目">宇野5丁目</option>
-          <option value="宇野6丁目">宇野6丁目</option>
-          <option value="宇野7丁目">宇野7丁目</option>
-          <option value="宇野8丁目">宇野8丁目</option>
-          <!-- 他の行政区分は次のパートで追加 -->
+          <option value="築港1丁目">築港1丁目</option>
+          <!-- 必要に応じて他の区分も追加 -->
         </select>
       </label>
       <label>名称：<input type="text" id="input-name" required /></label>
@@ -78,7 +103,8 @@
           <option value="×">×</option>
           <option value="要確認">要確認</option>
         </select>
-      </label>      <label>静水圧（MPa）：<input type="number" id="input-pressure" step="0.01" /></label>
+      </label>
+      <label>静水圧（MPa）：<input type="number" id="input-pressure" step="0.01" /></label>
       <label>容量（t）：<input type="number" id="input-capacity" /></label>
       <label>備考：<textarea id="input-note"></textarea></label>
       <label>緯度：<input type="text" id="input-lat" required /></label>
@@ -93,36 +119,21 @@
     <label>行政区分で絞り込み：
       <select id="filter-area">
         <option value="">すべて表示</option>
-        <option value="田井1丁目">田井1丁目</option>
-        <option value="田井2丁目">田井2丁目</option>
-        <option value="田井3丁目">田井3丁目</option>
-        <option value="田井4丁目">田井4丁目</option>
-        <option value="田井5丁目">田井5丁目</option>
-        <option value="田井6丁目">田井6丁目</option>
-        <option value="築港1丁目">築港1丁目</option>
-        <option value="築港2丁目">築港2丁目</option>
-        <option value="築港3丁目">築港3丁目</option>
-        <option value="築港4丁目">築港4丁目</option>
-        <option value="築港5丁目">築港5丁目</option>
         <option value="宇野1丁目">宇野1丁目</option>
         <option value="宇野2丁目">宇野2丁目</option>
-        <option value="宇野3丁目">宇野3丁目</option>
-        <option value="宇野4丁目">宇野4丁目</option>
-        <option value="宇野5丁目">宇野5丁目</option>
-        <option value="宇野6丁目">宇野6丁目</option>
-        <option value="宇野7丁目">宇野7丁目</option>
-        <option value="宇野8丁目">宇野8丁目</option>
-        <!-- 他の行政区分は続きで補完 -->
+        <option value="築港1丁目">築港1丁目</option>
       </select>
     </label>
     <input type="text" id="searchInput" placeholder="名称で検索">
     <button onclick="searchMarker()">ジャンプ</button>
     <div id="dataList"></div>
-  </div>  <script type="module">
+  </div>
+
+  <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
     const supabase = createClient(
       "https://lqyqeyxujdmvcromkkbg.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz..."
     );
 
     const today = new Date().toISOString().split("T")[0];
@@ -146,6 +157,7 @@
       document.getElementById("input-lng").value = latlng.lng.toFixed(6);
       switchTab('form-tab');
     }
+
     map.on("mousedown", e => holdTimer = setTimeout(() => setCoordsAndSwitchTab(e.latlng), 800));
     map.on("mouseup", () => clearTimeout(holdTimer));
     map.on("touchstart", e => holdTimer = setTimeout(() => setCoordsAndSwitchTab(e.latlng), 800));
@@ -156,43 +168,40 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const nameVal = document.getElementById("input-name").value.trim();
-      const latVal = document.getElementById("input-lat").value;
-      const lngVal = document.getElementById("input-lng").value;
-
-      if (!nameVal || !latVal || !lngVal) {
-        alert("名称、緯度、経度を入力してください");
-        return;
-      }
-
+      const idVal = document.getElementById("input-id").value;
       const data = {
-        name: nameVal,
+        name: document.getElementById("input-name").value.trim(),
         area: document.getElementById("input-area").value,
         type: document.getElementById("input-type").value,
         usable: document.getElementById("input-usable").value,
         pressure: parseFloat(document.getElementById("input-pressure").value),
         capacity: parseFloat(document.getElementById("input-capacity").value),
         note: document.getElementById("input-note").value,
-        lat: parseFloat(latVal),
-        lng: parseFloat(lngVal),
+        lat: parseFloat(document.getElementById("input-lat").value),
+        lng: parseFloat(document.getElementById("input-lng").value),
         date: document.getElementById("input-date").value
       };
 
-      const idVal = document.getElementById("input-id").value;
-      const result = idVal
-        ? await supabase.from("water_data").update(data).eq("id", idVal)
-        : await supabase.from("water_data").insert([data]);
+      let result;
+      if (idVal) {
+        result = await supabase.from("water_data").update(data, { returning: "representation" }).eq("id", parseInt(idVal));
+      } else {
+        result = await supabase.from("water_data").insert([data], { returning: "representation" });
+      }
 
-      if (result.error) return alert("保存エラー: " + result.error.message);
-
-      alert(idVal ? "更新しました！" : "保存しました（クラウド保存）");
+      if (result.error) {
+        console.error("保存エラー:", result.error.message);
+        return;
+      }
 
       form.reset();
       document.getElementById("input-date").value = today;
       document.getElementById("input-id").value = "";
       renderAll();
-      switchTab('map-tab');
-    });    async function renderAll() {
+      switchTab("map-tab");
+    });
+
+    async function renderAll() {
       const { data, error } = await supabase.from("water_data").select("*").order("id");
       if (error) return console.error("取得エラー:", error);
 
@@ -204,7 +213,7 @@
 
       renderMarkers(filtered);
       renderTable(filtered);
-      window._allWaterData = data; // 検索用に全体保持
+      window._allWaterData = data;
     }
 
     function renderMarkers(data) {
@@ -219,13 +228,10 @@
           shadowSize: [41, 41]
         });
 
-        const popupContent = (() => {
-          const base = `<strong>${d.name}</strong><br>種類: ${d.type}<br>`;
-          const note = `備考: ${d.note || 'なし'}<br>更新日: ${d.date}<br>`;
-          if (d.type === "消火栓") return base + `利用可否: ${d.usable}<br>静水圧: ${d.pressure ?? '未入力'} MPa<br>` + note;
-          if (d.type === "水槽") return base + `利用可否: ${d.usable}<br>容量: ${d.capacity ?? '未入力'} t<br>` + note;
-          return base + note;
-        })();
+        const popupContent = `<strong>${d.name}</strong><br>種類: ${d.type}<br>
+          ${d.type === "消火栓" ? `利用可否: ${d.usable}<br>静水圧: ${d.pressure ?? '未入力'} MPa<br>` : ''}
+          ${d.type === "水槽" ? `利用可否: ${d.usable}<br>容量: ${d.capacity ?? '未入力'} t<br>` : ''}
+          備考: ${d.note || 'なし'}<br>更新日: ${d.date}`;
 
         const marker = L.marker([d.lat, d.lng], { icon }).addTo(map).bindPopup(popupContent);
         marker._customId = d.name;
@@ -262,21 +268,30 @@
           </td>`;
         table.appendChild(row);
       });
+
       dataList.appendChild(table);
     }
 
-    window.editData = async function(id) {
+    window.editData = async function (id) {
       const { data, error } = await supabase.from("water_data").select("*").eq("id", id).single();
-      if (error) return alert("取得エラー");
-      for (const key in data) {
-        const input = document.getElementById("input-" + key);
-        if (input) input.value = data[key];
-      }
-      document.getElementById("input-id").value = id;
+      if (error || !data) return;
+
+      document.getElementById("input-id").value = data.id;
+      document.getElementById("input-area").value = data.area;
+      document.getElementById("input-name").value = data.name;
+      document.getElementById("input-type").value = data.type;
+      document.getElementById("input-usable").value = data.usable;
+      document.getElementById("input-pressure").value = data.pressure ?? "";
+      document.getElementById("input-capacity").value = data.capacity ?? "";
+      document.getElementById("input-note").value = data.note ?? "";
+      document.getElementById("input-lat").value = data.lat;
+      document.getElementById("input-lng").value = data.lng;
+      document.getElementById("input-date").value = data.date;
+
       switchTab("form-tab");
     };
 
-    window.deleteData = async function(id) {
+    window.deleteData = async function (id) {
       if (!confirm("この水利情報を削除しますか？")) return;
       await supabase.from("water_data").delete().eq("id", id);
       renderAll();
@@ -288,7 +303,7 @@
       if (marker) {
         switchTab("map-tab");
         setTimeout(() => {
-          map.invalidateSize(); // 地図崩れ防止
+          map.invalidateSize();
           map.setView(marker.getLatLng(), 18);
           marker.openPopup();
         }, 100);
@@ -298,7 +313,6 @@
     };
 
     document.getElementById("filter-area").addEventListener("change", renderAll);
-
     renderAll();
   </script>
 </body>
