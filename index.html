@@ -462,18 +462,36 @@ console.log("送信前のidVal:", idVal);
 }
 
     window.editData = async function(id) {
-  const { data, error } = await supabase.from("water_data").select("*").eq("id", id).single();
-  if (error) return alert("取得エラー");
+  alert("編集ボタンが押されました！ID: " + id);
 
-  for (const key in data) {
-    const input = document.getElementById("input-" + key);
-    if (input) input.value = data[key];
+  // 該当データを取得
+  const { data, error } = await supabase
+    .from("water_data")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    alert("データ取得エラー");
+    return;
   }
 
-  // ←ここが超重要！！
-  document.getElementById("input-id").value = id;
+  // 各フォーム項目に値をセット
+  document.getElementById("input-id").value = data.id;
+  document.getElementById("input-area").value = data.area;
+  document.getElementById("input-name").value = data.name;
+  document.getElementById("input-type").value = data.type;
+  document.getElementById("input-usable").value = data.usable;
+  document.getElementById("input-pressure").value = data.pressure ?? "";
+  document.getElementById("input-capacity").value = data.capacity ?? "";
+  document.getElementById("input-note").value = data.note ?? "";
+  document.getElementById("input-lat").value = data.lat;
+  document.getElementById("input-lng").value = data.lng;
+  document.getElementById("input-date").value = data.date;
 
-  alert("editDataでセットされたid: " + id);
+  alert("フォームに値をセットしました！\nID: " + data.id + "\n名称: " + data.name);
+
+  // フォームタブに切り替え
   switchTab("form-tab");
 };
 
