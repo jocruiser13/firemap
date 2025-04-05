@@ -350,12 +350,53 @@ const filtered = selectedArea && selectedArea !== "行政区分を選ぶ" && sel
   `;
 
   filtered.forEach(d => {
-    const iconColor = d.type === "消火栓" ? "red" : d.type === "水槽" ? "blue" : "green";
-    const icon = new L.Icon({
-      iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconColor}.png`,
-      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-    });
+  const iconColor = d.type === "消火栓" ? "red" : d.type === "水槽" ? "blue" : "green";
+  const icon = new L.Icon({
+    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconColor}.png`,
+    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+
+  const popupContent = (() => {
+    if (d.type === "その他") {
+      return `
+        <strong>${d.name}</strong><br>
+        行政区分: ${d.area}<br>
+        備考: ${d.note || 'なし'}<br>
+        更新日: ${d.date}
+      `;
+    }
+    if (d.type === "消火栓") {
+      return `
+        <strong>${d.name}</strong><br>
+        行政区分: ${d.area}<br>
+        種類: ${d.type}<br>
+        可否: ${d.usable}<br>
+        静水圧: ${d.pressure ?? ''} MPa<br>
+        備考: ${d.note || 'なし'}<br>
+        更新日: ${d.date}
+      `;
+    }
+    if (d.type === "水槽") {
+      return `
+        <strong>${d.name}</strong><br>
+        行政区分: ${d.area}<br>
+        種類: ${d.type}<br>
+        可否: ${d.usable}<br>
+        容量: ${d.capacity ?? ''} t<br>
+        備考: ${d.note || 'なし'}<br>
+        更新日: ${d.date}
+      `;
+    }
+  })();
+
+  const marker = L.marker([d.lat, d.lng], { icon }).addTo(map).bindPopup(popupContent);
+  marker._customId = d.name;
+  markers.push(marker);
+});
 
     const marker = L.marker([d.lat, d.lng], { icon }).addTo(map)
       .bindPopup(`<strong>${d.name}</strong><br>行政区分: ${d.area}<br>種類: ${d.type}<br>可否: ${d.usable}<br>静水圧: ${d.pressure ?? ''} MPa<br>容量: ${d.capacity ?? ''} t<br>備考: ${d.note || 'なし'}<br>更新日: ${d.date}`);
