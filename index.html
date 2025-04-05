@@ -356,8 +356,19 @@ const listData =
       <th>静水圧</th><th>容量</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th>
     </tr>
   `;
+const selectedArea = document.getElementById("filter-area").value;
 
-  filtered.forEach(d => {
+// マップは常に全件
+const mapData = data;
+
+// 一覧はフィルター条件に従う
+const listData =
+  selectedArea === "すべてを表示"
+    ? data
+    : selectedArea && selectedArea !== "行政区分を選ぶ"
+      ? data.filter(d => d.area === selectedArea)
+      : [];
+  mapData.forEach(d => {
   const iconColor = d.type === "消火栓" ? "red" : d.type === "水槽" ? "blue" : "green";
   const icon = new L.Icon({
     iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconColor}.png`,
@@ -368,7 +379,6 @@ const listData =
     shadowSize: [41, 41]
   });
 
-  // ポップアップ内容を種類ごとに分岐
   let popupContent = "";
   if (d.type === "その他") {
     popupContent = `
@@ -405,7 +415,9 @@ const listData =
   const marker = L.marker([d.lat, d.lng], { icon }).addTo(map).bindPopup(popupContent);
   marker._customId = d.name;
   markers.push(marker);
+});
 
+listData.forEach(d => {
   const row = document.createElement("tr");
   row.innerHTML = `
     <td>${d.area}</td><td>${d.name}</td><td>${d.type}</td><td>${d.usable}</td>
