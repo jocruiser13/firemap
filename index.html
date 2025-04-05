@@ -1,4 +1,3 @@
-<!-- 省略なし・完全版 index.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -10,30 +9,15 @@
   <script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"></script>
   <style>
     body { margin: 0; font-family: sans-serif; }
-    header {
-      position: fixed; top: 0; left: 0; right: 0;
-      display: flex; background: #2196f3; color: white;
-      font-weight: bold; z-index: 1000;
-    }
-    header div {
-      flex: 1; text-align: center; padding: 10px;
-      cursor: pointer;
-    }
-    .tab-content {
-      display: none; padding: 10px; margin-top: 50px;
-    }
-    #map {
-      height: calc(100vh - 50px);
-    }
+    header { display: flex; background: #2196f3; color: white; font-weight: bold; }
+    header div { flex: 1; text-align: center; padding: 10px; cursor: pointer; }
+    .tab-content { display: none; padding: 10px; }
+    #map { height: 60vh; }
     input, select, textarea, button {
-      width: 100%; margin: 6px 0; padding: 6px; font-size: 1em;
+      width: 100%; margin: 6px 0; padding: 6px;
     }
-    table {
-      width: 100%; border-collapse: collapse; font-size: 0.9em;
-    }
-    th, td {
-      border: 1px solid #ccc; padding: 6px;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+    th, td { border: 1px solid #ccc; padding: 6px; }
     th { background: #eee; }
   </style>
 </head>
@@ -44,14 +28,16 @@
     <div onclick="switchTab('list-tab')">一覧・検索</div>
   </header>
 
-  <div id="map-tab" class="tab-content"><div id="map"></div></div>
+  <div id="map-tab" class="tab-content">
+    <div id="map"></div>
+  </div>
 
   <div id="form-tab" class="tab-content">
     <h2>水利情報の追加・編集</h2>
     <form id="waterForm">
       <input type="hidden" id="input-id" />
-      <label>行政区分：<input id="input-area" required></label>
-      <label>名称：<input id="input-name" required></label>
+      <label>行政区分：<input type="text" id="input-area" required /></label>
+      <label>名称：<input type="text" id="input-name" required /></label>
       <label>種類：
         <select id="input-type">
           <option value="消火栓">消火栓</option>
@@ -66,148 +52,172 @@
           <option value="要確認">要確認</option>
         </select>
       </label>
-      <label>静水圧（MPa）：<input type="number" step="0.01" id="input-pressure" /></label>
+      <label>静水圧（MPa）：<input type="number" id="input-pressure" step="0.01" /></label>
       <label>容量（t）：<input type="number" id="input-capacity" /></label>
       <label>備考：<textarea id="input-note"></textarea></label>
-      <label>緯度：<input id="input-lat" required></label>
-      <label>経度：<input id="input-lng" required></label>
-      <label>最終更新日：<input id="input-date" readonly /></label>
+      <label>緯度：<input type="text" id="input-lat" required /></label>
+      <label>経度：<input type="text" id="input-lng" required /></label>
+      <label>最終更新日：<input type="text" id="input-date" readonly /></label>
       <button type="submit">送信（クラウド保存）</button>
     </form>
   </div>
 
   <div id="list-tab" class="tab-content">
     <h2>保存済み水利一覧</h2>
+    <input type="text" id="searchInput" placeholder="名称で検索" />
+    <button onclick="searchMarker()">ジャンプ</button>
     <div id="dataList"></div>
   </div>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabase = createClient(
-      "https://lqyqeyxujdmvcromkkbg.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxeXFleXh1amRtdmNyb21ra2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3MzUyOTIsImV4cCI6MjA1OTMxMTI5Mn0.2IxvU0Z49fJhvfn-Eey_PDdeUvYqDgDilIoudN9MGkU"
-    );
+const supabase = createClient(
+  "https://lqyqeyxujdmvcromkkbg.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxeXFleXh1amRtdmNyb21ra2JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3MzUyOTIsImV4cCI6MjA1OTMxMTI5Mn0.2IxvU0Z49fJhvfn-Eey_PDdeUvYqDgDilIoudN9MGkU"
+);
 
-    const today = new Date().toISOString().split("T")[0];
-    document.getElementById("input-date").value = today;
+const today = new Date().toISOString().split("T")[0];
+document.getElementById("input-date").value = today;
 
-    window.switchTab = function (id) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-      document.getElementById(id).style.display = 'block';
-    };
-    switchTab('map-tab');
+window.switchTab = function(id) {
+  document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+};
+switchTab('map-tab');
 
-    const map = L.map('map').setView([34.483955, 133.931957], 16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+const map = L.map('map', { zoomControl: false }).setView([34.483955, 133.931957], 16);
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
 
-    const markers = [];
-    const form = document.getElementById("waterForm");
+const markers = [];
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const idVal = parseInt(document.getElementById("input-id").value);
-      const data = {
-        name: document.getElementById("input-name").value.trim(),
-        area: document.getElementById("input-area").value,
-        type: document.getElementById("input-type").value,
-        usable: document.getElementById("input-usable").value,
-        pressure: parseFloat(document.getElementById("input-pressure").value) || null,
-        capacity: parseFloat(document.getElementById("input-capacity").value) || null,
-        note: document.getElementById("input-note").value,
-        lat: parseFloat(document.getElementById("input-lat").value),
-        lng: parseFloat(document.getElementById("input-lng").value),
-        date: document.getElementById("input-date").value
-      };
+async function renderAll() {
+  const { data, error } = await supabase.from("water_data").select("*").order("id");
+  if (error) return console.error("取得エラー:", error);
+  markers.forEach(m => map.removeLayer(m));
+  markers.length = 0;
 
-      let result;
-      if (!isNaN(idVal)) {
-        result = await supabase.from("water_data").update(data).eq("id", idVal).select();
-      } else {
-        result = await supabase.from("water_data").insert([data]).select();
-      }
+  const dataList = document.getElementById("dataList");
+  dataList.innerHTML = "";
+  const table = document.createElement("table");
+  table.innerHTML = `
+    <tr>
+      <th>行政区分</th><th>名称</th><th>種類</th><th>利用可否</th>
+      <th>静水圧</th><th>容量</th><th>緯度</th><th>経度</th><th>更新日</th><th>操作</th>
+    </tr>
+  `;
 
-      if (result.error) {
-        alert("保存エラー: " + result.error.message);
-        return;
-      }
-
-      if (!result.data || result.data.length === 0) {
-        alert("保存できませんでした（対象なし）");
-        return;
-      }
-
-      alert(isNaN(idVal) ? "保存完了" : "更新完了");
-
-      form.reset();
-      document.getElementById("input-date").value = today;
-      document.getElementById("input-id").value = "";
-      await renderAll();
-      switchTab("map-tab");
+  data.forEach(d => {
+    const iconColor = d.type === "消火栓" ? "red" : d.type === "水槽" ? "blue" : "green";
+    const icon = new L.Icon({
+      iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${iconColor}.png`,
+      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
     });
 
-    async function renderAll() {
-      const { data, error } = await supabase.from("water_data").select("*").order("id");
-      if (error) return alert("取得エラー: " + error.message);
+    const marker = L.marker([d.lat, d.lng], { icon }).addTo(map)
+      .bindPopup(`<strong>${d.name}</strong><br>行政区分: ${d.area}<br>種類: ${d.type}<br>可否: ${d.usable}<br>静水圧: ${d.pressure ?? ''} MPa<br>容量: ${d.capacity ?? ''} t<br>備考: ${d.note || 'なし'}<br>更新日: ${d.date}`);
+    marker._customId = d.name;
+    markers.push(marker);
 
-      markers.forEach(m => map.removeLayer(m));
-      markers.length = 0;
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${d.area}</td><td>${d.name}</td><td>${d.type}</td><td>${d.usable}</td>
+      <td>${d.pressure ?? ''}</td><td>${d.capacity ?? ''}</td><td>${d.lat}</td><td>${d.lng}</td><td>${d.date}</td>
+      <td>
+        <button onclick="window.editData(${d.id})">編集</button>
+        <button onclick="window.deleteData(${d.id})">削除</button>
+      </td>`;
+    table.appendChild(row);
+  });
+  dataList.appendChild(table);
+  window._allWaterData = data;
+}
 
-      const list = document.getElementById("dataList");
-      list.innerHTML = "";
+const form = document.getElementById("waterForm");
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const idVal = document.getElementById("input-id").value;
+  const data = {
+    area: document.getElementById("input-area").value,
+    name: document.getElementById("input-name").value,
+    type: document.getElementById("input-type").value,
+    usable: document.getElementById("input-usable").value,
+    pressure: parseFloat(document.getElementById("input-pressure").value),
+    capacity: parseFloat(document.getElementById("input-capacity").value),
+    note: document.getElementById("input-note").value,
+    lat: parseFloat(document.getElementById("input-lat").value),
+    lng: parseFloat(document.getElementById("input-lng").value),
+    date: document.getElementById("input-date").value
+  };
 
-      const table = document.createElement("table");
-      table.innerHTML = `
-        <tr>
-          <th>名称</th><th>行政区分</th><th>種類</th><th>操作</th>
-        </tr>
-      `;
+  let result;
+  if (idVal) {
+    result = await supabase.from("water_data").update(data).eq("id", parseInt(idVal));
+    if (result.error) return alert("更新エラー: " + result.error.message);
+    alert("更新しました！");
+  } else {
+    result = await supabase.from("water_data").insert([data]);
+    if (result.error) return alert("保存エラー: " + result.error.message);
+    alert("保存しました（クラウド保存）");
+  }
 
-      data.forEach(d => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${d.name}</td>
-          <td>${d.area}</td>
-          <td>${d.type}</td>
-          <td>
-            <button onclick="window.editData(${d.id})">編集</button>
-            <button onclick="window.deleteData(${d.id})">削除</button>
-          </td>`;
-        table.appendChild(row);
+  form.reset();
+  document.getElementById("input-date").value = new Date().toISOString().split("T")[0];
+  document.getElementById("input-id").value = "";
+  await renderAll();
+  switchTab("map-tab");
+});
 
-        const marker = L.marker([d.lat, d.lng]).addTo(map).bindPopup(d.name);
-        markers.push(marker);
-      });
+window.editData = async function(id) {
+  const { data, error } = await supabase.from("water_data").select("*").eq("id", id).maybeSingle();
+  if (error || !data) return alert("取得エラー：データが見つかりません");
 
-      list.appendChild(table);
-    }
+  document.getElementById("input-id").value = data.id;
+  document.getElementById("input-area").value = data.area || "";
+  document.getElementById("input-name").value = data.name || "";
+  document.getElementById("input-type").value = data.type || "";
+  document.getElementById("input-usable").value = data.usable || "";
+  document.getElementById("input-pressure").value = data.pressure ?? "";
+  document.getElementById("input-capacity").value = data.capacity ?? "";
+  document.getElementById("input-note").value = data.note || "";
+  document.getElementById("input-lat").value = data.lat ?? "";
+  document.getElementById("input-lng").value = data.lng ?? "";
+  document.getElementById("input-date").value = data.date || "";
+  switchTab("form-tab");
+};
 
-    window.editData = async function (id) {
-      const { data, error } = await supabase.from("water_data").select("*").eq("id", id).single();
-      if (error || !data) return alert("データ取得失敗");
+window.deleteData = async function(id) {
+  if (!confirm("この水利情報を削除しますか？")) return;
+  await supabase.from("water_data").delete().eq("id", id);
+  renderAll();
+};
 
-      document.getElementById("input-id").value = data.id;
-      document.getElementById("input-area").value = data.area ?? "";
-      document.getElementById("input-name").value = data.name ?? "";
-      document.getElementById("input-type").value = data.type ?? "";
-      document.getElementById("input-usable").value = data.usable ?? "";
-      document.getElementById("input-pressure").value = data.pressure ?? "";
-      document.getElementById("input-capacity").value = data.capacity ?? "";
-      document.getElementById("input-note").value = data.note ?? "";
-      document.getElementById("input-lat").value = data.lat;
-      document.getElementById("input-lng").value = data.lng;
-      document.getElementById("input-date").value = data.date;
+window.searchMarker = function () {
+  const name = document.getElementById("searchInput").value.trim();
+  const marker = markers.find(m => m._customId.includes(name));
+  if (marker) {
+    switchTab("map-tab");
+    setTimeout(() => {
+      map.invalidateSize();
+      map.setView(marker.getLatLng(), 18);
+      marker.openPopup();
+    }, 100);
+  } else {
+    alert("該当なし");
+  }
+};
 
-      switchTab("form-tab");
-    };
+map.on("click", e => {
+  document.getElementById("input-lat").value = e.latlng.lat.toFixed(6);
+  document.getElementById("input-lng").value = e.latlng.lng.toFixed(6);
+  switchTab("form-tab");
+});
 
-    window.deleteData = async function(id) {
-      if (!confirm("削除しますか？")) return;
-      await supabase.from("water_data").delete().eq("id", id);
-      renderAll();
-    };
-
-    renderAll();
-  </script>
+renderAll();
+</script>
 </body>
 </html>
