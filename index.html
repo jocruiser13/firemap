@@ -396,20 +396,17 @@ const filtered = selectedArea && selectedArea !== "行政区分を選ぶ" && sel
   const marker = L.marker([d.lat, d.lng], { icon }).addTo(map).bindPopup(popupContent);
   marker._customId = d.name;
   markers.push(marker);
+
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td>${d.area}</td><td>${d.name}</td><td>${d.type}</td><td>${d.usable}</td>
+    <td>${d.pressure ?? ''}</td><td>${d.capacity ?? ''}</td><td>${d.lat}</td><td>${d.lng}</td><td>${d.date}</td>
+    <td>
+      <button onclick="window.editData(${d.id})">編集</button>
+      <button onclick="window.deleteData(${d.id})">削除</button>
+    </td>`;
+  table.appendChild(row);
 });
-
-    
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${d.area}</td><td>${d.name}</td><td>${d.type}</td><td>${d.usable}</td>
-      <td>${d.pressure ?? ''}</td><td>${d.capacity ?? ''}</td><td>${d.lat}</td><td>${d.lng}</td><td>${d.date}</td>
-      <td>
-        <button onclick="window.editData(${d.id})">編集</button>
-        <button onclick="window.deleteData(${d.id})">削除</button>
-      </td>`;
-    table.appendChild(row);
-  });
 
   dataList.appendChild(table);
   window._allWaterData = data;
