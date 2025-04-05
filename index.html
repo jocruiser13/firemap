@@ -321,9 +321,23 @@ switchTab('map-tab');
 
 const map = L.map('map', { zoomControl: false }).setView([34.520269, 133.928329], 16);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
+// OpenStreetMap 標準地図レイヤー
+const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap contributors'
 }).addTo(map);
+
+// 国土地理院 航空写真レイヤー
+const gsiPhotoLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/orthophoto/{z}/{x}/{y}.jpg', {
+  attribution: '地図：国土地理院（GSI）'
+});
+
+// レイヤー切り替えコントロール
+const baseMaps = {
+  "標準地図": osmLayer,
+  "航空写真（GSI）": gsiPhotoLayer
+};
+L.control.layers(baseMaps).addTo(map);
 
 const markers = [];
 
