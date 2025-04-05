@@ -357,12 +357,17 @@
 
   let result;
   if (idVal) {
-    alert("更新モードに入りました");
-    result = await supabase.from("water_data").update(data).eq("id", idVal);
-  } else {
-    alert("新規保存モードに入りました");
-    result = await supabase.from("water_data").insert([data]);
-  }
+  alert("更新モードに入りました");
+  result = await supabase
+    .from("water_data")
+    .update(data, { returning: "representation" })  // ←これ追加
+    .eq("id", parseInt(idVal));                      // ←ここも修正
+} else {
+  alert("新規保存モードに入りました");
+  result = await supabase
+    .from("water_data")
+    .insert([data], { returning: "representation" }); // ←これも入れておくと良き
+}
 
   alert("Supabaseからの返り値: " + JSON.stringify(result));
 
