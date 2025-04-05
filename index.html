@@ -441,7 +441,10 @@ window.searchMarker = function () {
   }
 };
 
-map.on("click", e => {
+map.on("click", function (e) {
+  // クリックイベントのターゲットがマーカー（L.Marker）だったら何もしない
+  if (e.originalEvent.target.closest(".leaflet-marker-icon")) return;
+
   document.getElementById("input-lat").value = e.latlng.lat.toFixed(6);
   document.getElementById("input-lng").value = e.latlng.lng.toFixed(6);
   switchTab("form-tab");
