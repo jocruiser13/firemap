@@ -1,1 +1,1 @@
-https://github.com/jocruiser13/firemap/blob/main/index.html
+https://github.com/jocruiser13/firemap/blob/main/serviceWorker.js
