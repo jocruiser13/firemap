@@ -343,10 +343,11 @@ window.switchTab = function(id) {
 };
 switchTab('map-tab');
 
-const map = L.map('map', { zoomControl: false }).setView([34.520269, 133.928329], 16);
+const map = L.map('map', { zoomControl: false, maxZoom: 20 }).setView([34.520269, 133.928329], 16);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap contributors'
+  attribution: '© OpenStreetMap contributors',
+  maxZoom: 20  // ← 追加
 }).addTo(map);
 
 const markers = [];
