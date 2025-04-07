@@ -535,6 +535,15 @@ map.on("click", function (e) {
 });
 document.getElementById("filter-area").addEventListener("change", renderAll);
 renderAll();
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('serviceWorker.js').then(function (registration) {
+        console.log('ServiceWorker登録成功:', registration.scope);
+      }).catch(function (error) {
+        console.log('ServiceWorker登録失敗:', error);
+      });
+    });
+  }
 </script>
 </body>
 </html>
