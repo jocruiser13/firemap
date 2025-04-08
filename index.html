@@ -390,7 +390,7 @@ const listData =
     `;
   }
 
-  const marker = L.marker([d.lat, d.lng], { icon }).addTo(map).bindPopup(popupContent);
+  const marker = L.marker([d.lat, d.lng], { icon }).bindPopup(popupContent);
   marker._customId = d.name;
   markers.push(marker);
 });
