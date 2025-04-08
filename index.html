@@ -474,14 +474,20 @@ window.searchMarker = function () {
   const name = document.getElementById("searchInput").value.trim();
   const selectedArea = document.getElementById("filter-area").value;
 
-  // 絞り込み済みデータから探す
+  // 絞り込み済みデータから検索
   const filteredData = (selectedArea && selectedArea !== "すべてを表示" && selectedArea !== "行政区分を選ぶ")
     ? window._allWaterData.filter(d => d.area === selectedArea)
     : window._allWaterData;
 
   const matched = filteredData.find(d => d.name.includes(name));
   if (matched) {
-    const marker = markers.find(m => m._customId === matched.name);
+    // 緯度経度でマーカーを特定（名前ではなく座標を使う）
+    const marker = markers.find(m => {
+      const latLng = m.getLatLng();
+      return latLng.lat.toFixed(6) === matched.lat.toFixed(6) &&
+             latLng.lng.toFixed(6) === matched.lng.toFixed(6);
+    });
+
     if (marker) {
       switchTab("map-tab");
       setTimeout(() => {
@@ -489,6 +495,8 @@ window.searchMarker = function () {
         map.setView(marker.getLatLng(), 18);
         marker.openPopup();
       }, 100);
+    } else {
+      alert("マーカーが見つかりません");
     }
   } else {
     alert("該当なし");
