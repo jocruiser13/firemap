@@ -516,6 +516,19 @@ map.on("click", function (e) {
 });
 document.getElementById("filter-area").addEventListener("change", renderAll);
 renderAll();
+  // ズームレベルによってマーカー表示を制御
+map.on('zoomend', () => {
+  const currentZoom = map.getZoom();
+  if (currentZoom >= 17) {
+    markers.forEach(m => {
+      if (!map.hasLayer(m)) map.addLayer(m);
+    });
+  } else {
+    markers.forEach(m => {
+      if (map.hasLayer(m)) map.removeLayer(m);
+    });
+  }
+});
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('serviceWorker.js').then(function (registration) {
