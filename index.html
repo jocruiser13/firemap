@@ -408,7 +408,10 @@ listData.forEach(d => {
 });
 
   dataList.appendChild(table);
-  window._allWaterData = data;
+  window._allWaterData = data;// ズームが17以上ならマーカーを表示
+if (map.getZoom() >= 17) {
+  markers.forEach(m => map.addLayer(m));
+}
 }
 
 const form = document.getElementById("waterForm");
