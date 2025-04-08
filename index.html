@@ -519,7 +519,7 @@ renderAll();
   // ズームレベルによってマーカー表示を制御
 map.on('zoomend', () => {
   const currentZoom = map.getZoom();
-  if (currentZoom >= 13) {
+  if (currentZoom >= 17) {
     markers.forEach(m => {
       if (!map.hasLayer(m)) map.addLayer(m);
     });
