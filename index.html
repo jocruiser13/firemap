@@ -516,8 +516,9 @@ map.on("click", function (e) {
 });
 document.getElementById("filter-area").addEventListener("change", renderAll);
 renderAll();
+  updateMarkerVisibility();
   // ズームレベルによってマーカー表示を制御
-map.on('zoomend', () => {
+function updateMarkerVisibility() {
   const currentZoom = map.getZoom();
   if (currentZoom >= 17) {
     markers.forEach(m => {
@@ -528,7 +529,10 @@ map.on('zoomend', () => {
       if (map.hasLayer(m)) map.removeLayer(m);
     });
   }
-});
+}
+
+map.on('zoomend', updateMarkerVisibility);
+map.whenReady(updateMarkerVisibility);
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('serviceWorker.js').then(function (registration) {
