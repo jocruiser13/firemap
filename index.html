@@ -309,10 +309,19 @@ switchTab('map-tab');
 
 const map = L.map('map', { zoomControl: false, maxZoom: 20 }).setView([34.520269, 133.928329], 16);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap contributors',
-  maxZoom: 20  // ← 追加
-}).addTo(map);
+const baseMaps = {
+  "標準地図": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 20
+  }),
+  "航空写真": L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    attribution: '© Google',
+    maxZoom: 20
+  })
+};
+
+baseMaps["標準地図"].addTo(map);
+L.control.layers(baseMaps).addTo(map);
 
 const markers = [];
 
